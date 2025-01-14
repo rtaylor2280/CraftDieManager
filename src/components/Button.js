@@ -1,13 +1,12 @@
 import Link from "next/link";
 
-export default function Button({ text, href, bgColor = "bg-blue-500" }) {
+export default function Button({ text, href, bgColor }) {
   return (
-    <Link href={href}>
-      <button
-        className={`px-6 py-3 text-lg font-semibold rounded-lg shadow-md focus:outline-none ${bgColor} text-white hover:bg-blue-700`}
-      >
-        {text}
-      </button>
+    <Link
+      href={href}
+      className={`w-full sm:w-auto text-center px-4 py-3 font-semibold rounded-lg shadow-md hover:brightness-110 transition-all ${bgColor} text-white`}
+    >
+      {text}
     </Link>
   );
 }
