@@ -13,11 +13,13 @@ export default function Home() {
         </div>
 
         {/* Buttons */}
-        <div className="w-full max-w-xl flex gap-4">
-          <Button text="Manage Dies" href="/dies" bgColor="bg-blue-500" />
-          <Button text="Manage Locations" href="/locations" bgColor="bg-green-500" />
-          <Button text="View Gallery" href="/gallery" bgColor="bg-purple-500" />
-        </div>
+        <section>
+          <div className="w-full max-w-xl flex flex-wrap gap-4 justify-center">
+            <Button text="Manage Dies" href="/dies" bgColor="bg-blue-500" />
+            <Button text="Manage Locations" href="/locations" bgColor="bg-green-500" />
+            <Button text="View Gallery" href="/gallery" bgColor="bg-purple-500" />
+          </div>
+        </section>
       </main>
     </div>
   );
