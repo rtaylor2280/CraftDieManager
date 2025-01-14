@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Root Variables */
+:root {
+  --background: #f9fafb;
+  --header-footer-bg: linear-gradient(to right, #1e293b, #374151);
+  --button-bg: #3b82f6;
+  --button-hover-bg: #2563eb;
+  --button-text-color: white;
+}
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #1e293b;
+    --header-footer-bg: linear-gradient(to right, #0f172a, #1e293b);
+    --button-bg: #60a5fa;
+    --button-hover-bg: #3b82f6;
+    --button-text-color: #ffffff;
+  }
+}
+
+body {
+  background-color: var(--background);
+  color: var(--button-text-color);
+  font-family: "Geist", Arial, sans-serif;
+}
+
+header,
+footer {
+  background: var(--header-footer-bg);
+  color: white;
+  padding: 1rem 0;
+}
+
+button {
+  transition: all 0.2s ease-in-out;
+}
