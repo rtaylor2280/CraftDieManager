@@ -2,20 +2,29 @@
 
 import { useEffect, useState } from "react";
 import { sortLocations } from "@/utils/sortLocations";
+import Spinner from "@/components/Spinner"; // Import the Spinner component
 
-export default function Home() {
+export default function LocationsPage() {
   const [locations, setLocations] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [expandedGroups, setExpandedGroups] = useState({});
 
   useEffect(() => {
-    // Fetch data from the locations API
-    fetch("/api/locations")
-      .then((res) => res.json())
-      .then((data) => {
-        const sortedData = sortLocations(data); // Use updated sorting function
+    async function fetchLocations() {
+      try {
+        setLoading(true);
+        const res = await fetch("/api/locations");
+        const data = await res.json();
+        const sortedData = sortLocations(data);
         setLocations(sortedData);
-      })
-      .catch((err) => console.error("Failed to fetch locations:", err));
+      } catch (error) {
+        console.error("Failed to fetch locations:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchLocations();
   }, []);
 
   // Group locations by description
@@ -37,13 +46,19 @@ export default function Home() {
 
   return (
     <div className="min-h-screen p-8 bg-gray-50 font-sans">
-      <header className="text-center mb-10">
-        <h1 className="text-4xl font-bold text-gray-800">Craft Die Manager</h1>
-        <p className="text-gray-600 mt-4">Your Next.js app is connected to the database!</p>
-      </header>
-
       <main className="max-w-4xl mx-auto">
-        <h2 className="text-2xl font-semibold text-gray-700 mb-6">Locations</h2>
+        <div className="flex items-center mb-6">
+          <h2 className="text-2xl font-semibold text-gray-700">Locations</h2>
+          {loading && (
+            <span className="ml-1">
+              <Spinner
+              className="ml-3 w-5 h-5 text-gray-700"
+              aria-label="Loading"
+              />
+            </span>
+          )}
+        </div>
+
         {Object.entries(groupedLocations).map(([description, locations]) => (
           <div key={description} className="mb-6">
             <button
@@ -59,8 +74,12 @@ export default function Home() {
                     key={location.id}
                     className="p-4 border rounded-lg shadow-sm bg-white"
                   >
-                    <h3 className="text-xl font-semibold text-gray-800">{location.name}</h3>
-                    <p className="text-gray-600">{location.description || "No description provided"}</p>
+                    <h3 className="text-xl font-semibold text-gray-800">
+                      {location.name}
+                    </h3>
+                    <p className="text-gray-600">
+                      {location.description || "No description provided"}
+                    </p>
                   </li>
                 ))}
               </ul>
@@ -68,10 +87,6 @@ export default function Home() {
           </div>
         ))}
       </main>
-
-      <footer className="text-center mt-16 text-gray-500">
-        <p>Powered by Next.js & Vercel</p>
-      </footer>
     </div>
   );
 }
