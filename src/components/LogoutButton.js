@@ -1,7 +1,7 @@
 export default function LogoutButton() {
   const handleLogout = async () => {
     try {
-      const res = await fetch("/api/logout", { method: "POST" });
+      const res = await fetch("/api/auth/logout", { method: "POST" });
       if (res.ok) {
         window.location.href = "/login"; // Redirect to login after successful logout
       } else {

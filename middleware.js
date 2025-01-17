@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 
 export function middleware(req) {
-  const token = req.cookies.get("authToken");
+  const cookieStore = req.cookies;
+  const token = cookieStore.get("authToken")?.value;
   console.log("Token in Middleware:", token);
 
   // Redirect to login if no token is found
