@@ -1,5 +1,5 @@
 export default function handler(req, res) {
-  console.log("API Route Hit: /api/logout");
+  console.log("API Route Hit: /api/auth/logout");
 
   // Clear the authToken cookie
   res.setHeader(
