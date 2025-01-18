@@ -4,9 +4,10 @@ import { fetchUserById } from "@/utils/userVerify";
 
 const sql = neon(process.env.DATABASE_URL); // Initialize sql instance
 const SECRET = process.env.JWT_SECRET;
+const BASE_URL = process.env.BASE_URL; // Use the dynamic BASE_URL
 
 export default async function handler(req, res) {
-  console.log("API Route Hit: /api//auth/verify");
+  console.log("API Route Hit: /api/auth/verify");
 
   const token = req.cookies?.authToken;
   if (!token) {
@@ -37,10 +38,10 @@ export default async function handler(req, res) {
     } catch (err) {
       console.error("Error updating lastAuthorization:", err.message);
     } 
-    
+
     // Send email using the send-email route
     try {
-      const emailResponse = await fetch("http://localhost:3000/api/send-email", {
+      const emailResponse = await fetch(`${BASE_URL}/api/send-email`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
