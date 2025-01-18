@@ -36,7 +36,30 @@ export default async function handler(req, res) {
       console.log("Last authorization timestamp updated successfully.");
     } catch (err) {
       console.error("Error updating lastAuthorization:", err.message);
-    }    
+    } 
+    
+    // Send email using the send-email route
+    try {
+      const emailResponse = await fetch("http://localhost:3000/api/send-email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          to: "craftdiemanager@gmail.com",
+          subject: `Login Report - ${user.username}`,
+          body: `The user "${user.username}" logged in at ${new Date().toLocaleString()}.`,
+        }),
+      });
+
+      if (!emailResponse.ok) {
+        console.error("Failed to send email via send-email route:", await emailResponse.text());
+      } else {
+        console.log("Login email sent successfully.");
+      }
+    } catch (error) {
+      console.error("Error calling send-email route:", error.message);
+    }
 
     // Extend token expiration by 30 days
     const newToken = jwt.sign({ userId: decoded.userId, role: decoded.role }, SECRET, { expiresIn: "30d" });
