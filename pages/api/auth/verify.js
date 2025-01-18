@@ -11,8 +11,8 @@ export default async function handler(req, res) {
 
   const token = req.cookies?.authToken;
   if (!token) {
-    console.warn("No token provided in /api/verify. User likely unauthenticated.");
-    return res.status(401).json({ error: "Unauthorized: No token provided." });
+    console.info("No token provided. Returning unauthenticated response.");
+    return res.status(200).json({ authenticated: false, message: "No token provided." });
   }
 
   try {
@@ -26,7 +26,7 @@ export default async function handler(req, res) {
         "Set-Cookie",
         `authToken=; HttpOnly; Path=/; Max-Age=0; Secure; SameSite=Strict`
       );
-      return res.status(403).json({ error: "Access revoked. Please log in again." });
+      return res.status(200).json({ authenticated: false, message: "Access revoked. Please log in again." });
     }
 
     console.log("Token Decoded:", decoded);
@@ -39,29 +39,6 @@ export default async function handler(req, res) {
       console.error("Error updating lastAuthorization:", err.message);
     } 
 
-    // Send email using the send-email route
-    try {
-      const emailResponse = await fetch(`${BASE_URL}/api/send-email`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          to: "craftdiemanager@gmail.com",
-          subject: `Login Report - ${user.username}`,
-          body: `The user "${user.username}" logged in at ${new Date().toLocaleString()}.`,
-        }),
-      });
-
-      if (!emailResponse.ok) {
-        console.error("Failed to send email via send-email route:", await emailResponse.text());
-      } else {
-        console.log("Login email sent successfully.");
-      }
-    } catch (error) {
-      console.error("Error calling send-email route:", error.message);
-    }
-
     // Extend token expiration by 30 days
     const newToken = jwt.sign({ userId: decoded.userId, role: decoded.role }, SECRET, { expiresIn: "30d" });
     res.setHeader(
@@ -69,9 +46,14 @@ export default async function handler(req, res) {
       `authToken=${newToken}; HttpOnly; Path=/; Max-Age=2592000; Secure; SameSite=Strict`
     );
 
-    return res.status(200).json({ userId: decoded.userId, role: decoded.role });
+    return res.status(200).json({ 
+      authenticated: true,
+      userId: decoded.userId, 
+      firstName: decoded.first_name,
+      role: decoded.role 
+    });
   } catch (err) {
     console.error("Token verification failed:", err.message);
-    return res.status(401).json({ error: "Unauthorized: Invalid or expired token." });
+    return res.status(200).json({ authenticated: false, message: "Invalid or expired token." });
   }
 }

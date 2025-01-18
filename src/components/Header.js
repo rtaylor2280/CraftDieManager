@@ -13,9 +13,7 @@ export default function Header() {
       <header className="sticky top-0 z-10 bg-gray-800 text-white py-4 shadow-md">
         <div className="container mx-auto flex justify-between items-center">
           <h1 className="text-2xl font-bold">Craft Die Manager</h1>
-          <div className="flex items-center justify-center">
-            <Spinner />
-          </div>
+          <Spinner />
         </div>
       </header>
     );
