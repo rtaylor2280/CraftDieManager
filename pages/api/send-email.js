@@ -44,3 +44,30 @@ export default async function handler(req, res) {
     res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
+
+
+/********************Example************************/
+/*
+    // Send email using the send-email route
+    try {
+      const emailResponse = await fetch(`${BASE_URL}/api/send-email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          to: "craftdiemanager@gmail.com",
+          subject: `Login Report - ${user.username}`,
+          body: `The user "${user.username}" logged in at ${new Date().toLocaleString()}.`,
+        }),
+      });
+
+      if (!emailResponse.ok) {
+        console.error("Failed to send email via send-email route:", await emailResponse.text());
+      } else {
+        console.log("Login email sent successfully.");
+      }
+    } catch (error) {
+      console.error("Error calling send-email route:", error.message);
+    }
+/****************************************************/

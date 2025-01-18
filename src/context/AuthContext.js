@@ -14,8 +14,11 @@ export function AuthProvider({ children }) {
     const checkAuth = async () => {
       try {
         const res = await fetch("/api/auth/verify", { method: "GET", credentials: "include" });
-        if (res.ok) {
-          const data = await res.json();
+        
+        // Check if the response is okay and parse the JSON response
+        const data = res.ok ? await res.json() : null;
+
+        if (data.authenticated) {
           setIsAuthenticated(true);
           setUser(data); // Store user details
         } else {
