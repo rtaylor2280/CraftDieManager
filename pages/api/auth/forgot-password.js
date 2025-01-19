@@ -97,13 +97,16 @@ function getEmailBody(resetLink) {
         .btn {
           display: inline-block;
           padding: 10px 20px;
-          color: white;
-          background-color: #007BFF;
-          text-decoration: none;
+          color: white !important;
+          background-color: #007BFF !important;
+          text-decoration: none !important;
           border-radius: 5px;
+          border: 1px solid #007BFF; /* Ensures consistent border color */
+          font-weight: bold; /* Helps text stand out */
         }
         .btn:hover {
-          background-color: #0056b3;
+          background-color: #0056b3 !important;
+          border-color: #0056b3; /* Matches the hover background */
         }
         .footer {
           margin-top: 20px;
@@ -128,3 +131,4 @@ function getEmailBody(resetLink) {
     </html>
   `;
 }
+
