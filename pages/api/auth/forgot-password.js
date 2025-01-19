@@ -43,18 +43,66 @@ export default async function handler(req, res) {
         const resetLink = `${BASE_URL}/reset-password?token=${resetToken}`;
 
         const emailResponse = await fetch(`${BASE_URL}/api/send-email`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            to: email,
-            subject: "Password Reset Request",
-            body: `
-              <p>You requested a password reset. Click the link below to reset your password:</p>
-              <p><a href="${resetLink}">Reset Password</a></p>
-              <p>This link will expire in 1 hour.</p>
-            `,
-          }),
-        });
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    to: email,
+    subject: "Password Reset Request",
+    body: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f9f9f9;
+            padding: 20px;
+          }
+          .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+          }
+          .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            color: white;
+            background-color: #007BFF;
+            text-decoration: none;
+            border-radius: 5px;
+          }
+          .btn:hover {
+            background-color: #0056b3;
+          }
+          .footer {
+            margin-top: 20px;
+            font-size: 0.8em;
+            color: #555;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="email-container">
+          <h2>Password Reset Request</h2>
+          <p>You requested a password reset. Click the link below to reset your password:</p>
+          <p>
+            <a href="${resetLink}" class="btn">Reset Password</a>
+          </p>
+          <p>This link will expire in 1 hour.</p>
+          <div class="footer">
+            <p>If you did not request a password reset, you can ignore this email.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `,
+  }),
+});
 
         if (!emailResponse.ok) {
           console.error("Forgot-password: Failed to send email.", await emailResponse.text());
