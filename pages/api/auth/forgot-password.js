@@ -39,7 +39,7 @@ export default async function handler(req, res) {
         console.log(`Forgot-password: Token generated and saved for email: ${email}`);
 
         // Send reset email
-        const BASE_URL = process.env.BASE_URL || "http://localhost:3000";
+        const BASE_URL = process.env.BASE_URL;
         const resetLink = `${BASE_URL}/reset-password?token=${resetToken}`;
 
         const emailResponse = await fetch(`${BASE_URL}/api/send-email`, {
