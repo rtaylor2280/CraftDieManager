@@ -18,6 +18,7 @@ export default function LoginPage() {
   const [message, setMessage] = useState("");
   const [isTyping, setIsTyping] = useState(false); // Track if the user is typing
   const [typingTimeout, setTypingTimeout] = useState(null); // Timeout for validation delay
+  const [isEmailValid, setIsEmailValid] = useState(false); // Track email validity for the button
 
   useEffect(() => {
     setReadyToRender(true);
@@ -25,7 +26,6 @@ export default function LoginPage() {
   }, []);
 
   const validateEmail = (email) => {
-    // Simple regex for email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
@@ -33,16 +33,20 @@ export default function LoginPage() {
   const handleEmailChange = (e) => {
     const value = e.target.value;
     setEmail(value);
+
+    // Instant validation for the button
+    setIsEmailValid(validateEmail(value));
+
     setIsTyping(true); // User is typing
-  
+
     // Clear any existing timeout
     if (typingTimeout) clearTimeout(typingTimeout);
-  
+
     // Set a new timeout to validate after the user stops typing
     setTypingTimeout(
       setTimeout(() => {
         setIsTyping(false); // User has stopped typing
-        if (!validateEmail(value)) {
+        if (value && !validateEmail(value)) {
           setEmailError("Invalid email format");
         } else {
           setEmailError(""); // Clear error if valid
@@ -83,7 +87,7 @@ export default function LoginPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
-  
+
       console.log("Reset link sent for email:", email);
       setMessage(
         `If this email (${email}) is registered, we will send a reset link. Please check your inbox and spam folder.`
@@ -94,7 +98,7 @@ export default function LoginPage() {
         "If this email is registered, we have sent a reset link. Please check your inbox and spam folder."
       );
     }
-  };  
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -131,9 +135,9 @@ export default function LoginPage() {
                   )}
                   <button
                     onClick={handleForgotPassword}
-                    disabled={!email || emailError} // Disable until email is valid
+                    disabled={!email || !isEmailValid} // Separate condition for button enablement
                     className={`w-full p-2 rounded mb-2 ${
-                      email && !emailError
+                      email && isEmailValid
                         ? "bg-green-500 text-white hover:bg-green-600"
                         : "bg-gray-300 text-gray-500 cursor-not-allowed"
                     }`}
