@@ -40,7 +40,7 @@ export default async function handler(req, res) {
     } 
 
     // Extend token expiration by 30 days
-    const newToken = jwt.sign({ userId: decoded.userId, role: decoded.role }, SECRET, { expiresIn: "30d" });
+    const newToken = jwt.sign({ userId: decoded.userId, role: decoded.role, firstName: decoded.first_name, lastName: decoded.last_name }, SECRET, { expiresIn: "30d" });
     res.setHeader(
       "Set-Cookie",
       `authToken=${newToken}; HttpOnly; Path=/; Max-Age=2592000; Secure; SameSite=Strict`
@@ -49,7 +49,8 @@ export default async function handler(req, res) {
     return res.status(200).json({ 
       authenticated: true,
       userId: decoded.userId, 
-      firstName: decoded.first_name,
+      firstName: decoded.firstName,
+      lastName: decoded.lastName,
       role: decoded.role 
     });
   } catch (err) {

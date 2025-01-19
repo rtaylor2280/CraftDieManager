@@ -33,6 +33,8 @@ export async function verifyUser(username, password) {
       id: user[0].id,
       username: user[0].username,
       role: user[0].role,
+      firstName: user[0].first_name,
+      lastName: user[0].last_name,
       active: user[0].active, // Include 'active' if needed
     };
   } catch (err) {
