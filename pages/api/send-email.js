@@ -20,12 +20,20 @@ export default async function handler(req, res) {
     }
 
     try {
-      const email = `To: ${to}\r\nSubject: ${subject}\r\n\r\n${body}`;
-      const encodedEmail = Buffer.from(email)
-        .toString('base64')
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=+$/, '');
+      const email = `
+To: ${to}
+Subject: ${subject}
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+${body}
+`;
+
+const encodedEmail = Buffer.from(email)
+  .toString('base64')
+  .replace(/\+/g, '-')
+  .replace(/\//g, '_')
+  .replace(/=+$/, '');
 
       const result = await gmail.users.messages.send({
         userId: 'me',
