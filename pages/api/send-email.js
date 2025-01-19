@@ -21,22 +21,22 @@ export default async function handler(req, res) {
 
     try {
       const email = `
-To: ${to}
-Subject: ${subject}
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+      From: "Craft Die Manager" <craftdiemanager@gmail.com>
+      To: ${to}
+      Subject: ${subject}
+      Content-Type: text/html; charset=UTF-8
+      Content-Transfer-Encoding: 7bit
+      ${body}
+      `;
 
-${body}
-`;
-
-const encodedEmail = Buffer.from(email)
-  .toString('base64')
-  .replace(/\+/g, '-')
-  .replace(/\//g, '_')
-  .replace(/=+$/, '');
+      const encodedEmail = Buffer.from(email)
+        .toString("base64")
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=+$/, "");
 
       const result = await gmail.users.messages.send({
-        userId: 'me',
+        userId: "me",
         requestBody: {
           raw: encodedEmail,
         },
