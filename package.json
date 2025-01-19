@@ -21,6 +21,7 @@
     "googleapis": "^144.0.0",
     "jsonwebtoken": "^9.0.2",
     "next": "^15.1.5",
+    "node-fetch": "^2.6.7",
     "pg": "^8.13.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
