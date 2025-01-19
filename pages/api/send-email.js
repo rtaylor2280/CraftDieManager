@@ -1,58 +1,57 @@
-import { google } from 'googleapis';
-
-const oauth2Client = new google.auth.OAuth2(
-  process.env.GOOGLE_CLIENT_ID,
-  process.env.GOOGLE_CLIENT_SECRET
-);
-
-oauth2Client.setCredentials({
-  refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
-});
-
-const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+import { google } from "googleapis";
 
 export default async function handler(req, res) {
-  if (req.method === 'POST') {
+  console.log("API Route Hit: /api/send-email");
+
+  if (req.method === "POST") {
     const { to, subject, body } = req.body;
 
     if (!to || !subject || !body) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      console.error("Missing email fields in the request body.");
+      return res.status(400).json({ error: "Missing required email fields" });
     }
 
     try {
-      const email = `
-      From: "Craft Die Manager" <craftdiemanager@gmail.com>
-      To: ${to}
-      Subject: ${subject}
-      Content-Type: text/html; charset=UTF-8
-      Content-Transfer-Encoding: 7bit
-      ${body}
-      `;
+      console.log("Sending email to:", to);
 
-      const encodedEmail = Buffer.from(email)
+      const oauth2Client = new google.auth.OAuth2(
+        process.env.GOOGLE_CLIENT_ID,
+        process.env.GOOGLE_CLIENT_SECRET,
+        process.env.GOOGLE_REDIRECT_URI
+      );
+
+      oauth2Client.setCredentials({
+        refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
+      });
+
+      const gmail = google.gmail({ version: "v1", auth: oauth2Client });
+
+      const encodedMessage = Buffer.from(
+        `To: ${to}\r\nSubject: ${subject}\r\nContent-Type: text/html; charset=utf-8\r\n\r\n${body}`
+      )
         .toString("base64")
         .replace(/\+/g, "-")
         .replace(/\//g, "_")
         .replace(/=+$/, "");
 
-      const result = await gmail.users.messages.send({
+      const response = await gmail.users.messages.send({
         userId: "me",
         requestBody: {
-          raw: encodedEmail,
+          raw: encodedMessage,
         },
       });
 
-      return res.status(200).json({ message: 'Email sent successfully', result });
-    } catch (error) {
-      console.error('Failed to send email:', error.response?.data || error.message);
-      return res.status(500).json({ error: 'Failed to send email', details: error.response?.data || error.message });
+      console.log("Email sent successfully:", response.data);
+      return res.status(200).json({ message: "Email sent successfully" });
+    } catch (err) {
+      console.error("Error sending email:", err.message);
+      return res.status(500).json({ error: "Failed to send email" });
     }
   } else {
-    res.setHeader('Allow', ['POST']);
-    res.status(405).end(`Method ${req.method} Not Allowed`);
+    res.setHeader("Allow", ["POST"]);
+    return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
-
 
 /********************Example************************/
 /*

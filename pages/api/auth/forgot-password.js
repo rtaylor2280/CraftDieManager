@@ -1,21 +1,77 @@
 import { neon } from "@neondatabase/serverless";
 import { v4 as uuidv4 } from "uuid";
-// import validator from 'validator';
-// import rateLimit from 'express-rate-limit';
 
 const sql = neon(process.env.DATABASE_URL); // Initialize the Neon SQL client
 
-const ONE_HOUR = 60 * 60 * 1000;
-const TOKEN_EXPIRY_TIME = new Date(Date.now() + ONE_HOUR); // 1 hour
+export default async function handler(req, res) {
+  if (req.method === "POST") {
+    const { email } = req.body;
 
-// Commenting out rate limiting temporarily
-/*
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // limit each IP to 5 requests per windowMs
-  message: "Too many password reset requests from this IP, please try again later."
-});
-*/
+    // Generic response to avoid exposing email existence
+    const genericResponse = {
+      message: "If this email is registered, we have sent a reset link. Please check your inbox and spam folder.",
+    };
+
+    if (!email) {
+      console.warn("Forgot-password: No email provided in request.");
+      return res.status(400).json({ error: "Valid email is required" });
+    }
+
+    try {
+      console.log(`Forgot-password: Processing reset request for ${email}`);
+
+      // Check if the user exists
+      const user = await sql`SELECT * FROM users WHERE email = ${email}`;
+
+      if (user.length > 0) {
+        // Generate reset token and expiry
+        const resetToken = uuidv4();
+        const tokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+        console.log(`Forgot-password: tokenExpiry will be recorded as ${tokenExpiry}`);
+
+        // Update user record with token
+        await sql`
+          UPDATE users
+          SET reset_token = ${resetToken}, reset_token_expires = ${tokenExpiry}
+          WHERE email = ${email}
+        `;
+        console.log("Forgot-password: Reset token created and saved.");
+
+        // Send reset email
+        const BASE_URL = process.env.BASE_URL || "http://localhost:3000";
+        const resetLink = `${BASE_URL}/reset-password?token=${resetToken}`;
+        const emailBody = getEmailBody(resetLink);
+
+        const emailResponse = await fetch(`${BASE_URL}/api/send-email`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            to: email,
+            subject: "Password Reset Request",
+            body: emailBody,
+          }),
+        });
+
+        if (!emailResponse.ok) {
+          console.error("Forgot-password: Failed to send email.");
+        } else {
+          console.log("Forgot-password: Reset email sent successfully.");
+        }
+      } else {
+        console.warn("Forgot-password: No user found for the provided email.");
+      }
+
+      // Always return the generic response
+      return res.status(200).json(genericResponse);
+    } catch (error) {
+      console.error("Forgot-password: Error during processing:", error);
+      return res.status(500).json(genericResponse); // Generic response for server errors
+    }
+  } else {
+    res.setHeader("Allow", ["POST"]);
+    return res.status(405).end(`Method ${req.method} Not Allowed`);
+  }
+}
 
 function getEmailBody(resetLink) {
   return `
@@ -71,77 +127,4 @@ function getEmailBody(resetLink) {
     </body>
     </html>
   `;
-}
-
-export default async function handler(req, res) {
-  // Commenting out rate limiting temporarily
-  // await limiter(req, res, async () => {
-    if (req.method === "POST") {
-      const { email } = req.body;
-
-      // Generic user-facing response
-      const genericResponse = {
-        message: "If this email is registered, we have sent a reset link. Please check your inbox and spam folder.",
-      };
-
-      if (!email /* || !validator.isEmail(email) */) {
-        console.warn("Forgot-password: Invalid email provided in request.");
-        return res.status(400).json({ error: "Valid email is required" });
-      }
-
-      try {
-        console.log(`Forgot-password: Processing reset for email: ${email}`);
-
-        // Check if the user exists
-        const user = await sql`SELECT * FROM users WHERE email = ${email}`;
-
-        if (user.length > 0) {
-          console.log(`Forgot-password: User found for email: ${email}`);
-
-          // Generate reset token and expiry
-          const resetToken = uuidv4();
-          const tokenExpiry = TOKEN_EXPIRY_TIME;
-
-          // Update user record with token
-          await sql`
-            UPDATE users
-            SET reset_token = ${resetToken}, reset_token_expires = ${tokenExpiry}
-            WHERE email = ${email}
-          `;
-          console.log(`Forgot-password: Token generated and saved for email: ${email}`);
-
-          // Send reset email
-          const BASE_URL = process.env.BASE_URL.replace('http://', 'https://');
-          const resetLink = `${BASE_URL}/reset-password?token=${resetToken}`;
-
-          const emailResponse = await fetch(`${BASE_URL}/api/send-email`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              to: email,
-              subject: "Password Reset Request",
-              body: getEmailBody(resetLink),
-            }),
-          });
-
-          if (!emailResponse.ok) {
-            console.error("Forgot-password: Failed to send email.", await emailResponse.text());
-          } else {
-            console.log(`Forgot-password: Reset email sent successfully to ${email}`);
-          }
-        } else {
-          console.warn(`Forgot-password: No user found for email: ${email}`);
-        }
-
-        // Always return the same generic response to avoid exposing email existence
-        return res.status(200).json(genericResponse);
-      } catch (error) {
-        console.error("Forgot-password: Error occurred during processing:", error);
-        return res.status(500).json(genericResponse); // Generic message for server errors
-      }
-    } else {
-      res.setHeader("Allow", ["POST"]);
-      return res.status(405).end(`Method ${req.method} Not Allowed`);
-    }
-  // });
 }
