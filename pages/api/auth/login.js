@@ -20,7 +20,16 @@ export default async function handler(req, res) {
       }
 
       // Generate JWT token
-      const token = jwt.sign({ userId: user.id, role: user.role }, SECRET, { expiresIn: "30d" });
+      const token = jwt.sign(
+        { userId: user.id, 
+          role: user.role, 
+          firstName: user.firstName, 
+          lastName: user.lastName 
+
+        }, 
+        SECRET, 
+        { expiresIn: "30d" }
+      );
       console.log("Generated Token:", token);
 
       // Set cookie attributes dynamically

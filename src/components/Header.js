@@ -11,7 +11,7 @@ export default function Header() {
   if (loading) {
     return (
       <header className="sticky top-0 z-10 bg-gray-800 text-white py-4 shadow-md">
-        <div className="container mx-auto flex justify-between items-center">
+        <div className="container mx-auto flex justify-center items-center text-center">
           <h1 className="text-2xl font-bold">Craft Die Manager</h1>
           <Spinner />
         </div>
@@ -21,15 +21,15 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-10 bg-gray-800 text-white py-4 shadow-md">
-      <div className="container mx-auto flex justify-between items-center">
+      <div className="container mx-auto flex justify-between items-center text-center">
         <Link href="/">
           <h1 className="text-2xl font-bold cursor-pointer">Craft Die Manager</h1>
         </Link>
         {isAuthenticated ? (
-          <>
-            <p className="mr-4">{`Welcome, ${user?.role || "User"}`}</p>
+          <div className="flex items-center space-x-4">
+            <p>{`Welcome, ${user?.firstName || "User"}`}</p>
             <LogoutButton />
-          </>
+          </div>
         ) : (
           <a
             href="/login"
