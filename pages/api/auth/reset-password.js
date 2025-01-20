@@ -13,7 +13,7 @@ export default async function handler(req, res) {
     }
 
     try {
-      console.log("Received token:", token);
+      console.log("Received token for password reset:", token);
 
       const user = await sql`
         SELECT reset_token, reset_token_expires, NOW() AS current_time
@@ -26,12 +26,12 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: "Invalid or expired token" });
       }
 
-      console.log("DB Token:", user[0].reset_token);
-      console.log("DB Expiry Time:", user[0].reset_token_expires);
-      console.log("Current Time:", user[0].current_time);
+      const { reset_token_expires } = user[0];
+      console.log("DB Expiry Time:", reset_token_expires);
+      console.log("Current Time:", new Date());
 
       // Ensure the token is not expired
-      if (new Date(user[0].reset_token_expires) <= new Date()) {
+      if (new Date(reset_token_expires) <= new Date()) {
         console.error("Token is expired.");
         return res.status(400).json({ error: "Token has expired" });
       }
@@ -54,8 +54,45 @@ export default async function handler(req, res) {
       console.error("Error in /api/auth/reset-password:", error);
       return res.status(500).json({ error: "An unexpected error occurred" });
     }
+  } else if (req.method === "GET") {
+    const token = req.query.token;
+
+    if (!token) {
+      console.log("No token provided in request query.");
+      return res.status(400).json({ error: "Token is required" });
+    }
+
+    try {
+      console.log("Validating token:", token);
+
+      const user = await sql`
+        SELECT reset_token_expires, NOW() AS current_time
+        FROM users
+        WHERE reset_token = ${token}
+      `;
+
+      if (user.length === 0) {
+        console.warn("Invalid token provided:", token);
+        return res.status(404).json({ valid: false, error: "Invalid token" });
+      }
+
+      const { reset_token_expires } = user[0];
+      console.log("DB Expiry Time:", reset_token_expires);
+
+      // Check token expiration
+      if (new Date(reset_token_expires) <= new Date()) {
+        console.warn("Token has expired:", token);
+        return res.status(400).json({ valid: false, error: "Token expired" });
+      }
+
+      console.log("Token is valid:", token);
+      return res.status(200).json({ valid: true });
+    } catch (error) {
+      console.error("Error validating token:", error);
+      return res.status(500).json({ error: "An unexpected error occurred" });
+    }
   } else {
-    res.setHeader("Allow", ["POST"]);
+    res.setHeader("Allow", ["POST", "GET"]);
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
