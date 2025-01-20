@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import Spinner from "@/components/Spinner";
 
-export default function ResetPasswordPage() {
+export default function ResetPasswordForm() {
   const [tokenValid, setTokenValid] = useState(null);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -12,19 +13,24 @@ export default function ResetPasswordPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get("token");
+  const rememberMe = searchParams.get("rememberMe") === "true";
+  const firstTimeLogin = searchParams.get("firstTimeLogin") === "true";
 
   // Validate token on mount
   useEffect(() => {
     const validateToken = async () => {
+      if (!token) {
+        console.error("No token provided");
+        setTokenValid(false);
+        setLoading(false);
+        return;
+      }
+
       try {
+        console.log("Validating token...");
         const res = await fetch(`/api/auth/reset-password?token=${token}`);
         const data = await res.json();
-
-        if (res.ok && data.valid) {
-          setTokenValid(true);
-        } else {
-          setTokenValid(false);
-        }
+        setTokenValid(res.ok && data.valid);
       } catch (error) {
         console.error("Error validating token:", error);
         setTokenValid(false);
@@ -33,12 +39,7 @@ export default function ResetPasswordPage() {
       }
     };
 
-    if (token) {
-      validateToken();
-    } else {
-      setTokenValid(false);
-      setLoading(false);
-    }
+    validateToken();
   }, [token]);
 
   // Handle form submission
@@ -50,16 +51,18 @@ export default function ResetPasswordPage() {
     }
 
     try {
+      console.log("Submitting new password...");
       const res = await fetch("/api/auth/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, newPassword }),
+        body: JSON.stringify({ token, newPassword, rememberMe }),
       });
 
       const data = await res.json();
       if (res.ok) {
-        alert("Password reset successfully!");
-        router.push("/login");
+        console.log("Password updated successfully!");
+        alert("Password updated successfully!");
+        window.location.href = "/"; // Redirect to home after successful reset
       } else {
         setErrorMessage(data.error || "Failed to reset password");
       }
@@ -73,7 +76,7 @@ export default function ResetPasswordPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <p>Loading...</p>
+        <Spinner />
       </div>
     );
   }
@@ -106,6 +109,11 @@ export default function ResetPasswordPage() {
         onSubmit={handleSubmit}
         className="bg-white p-6 rounded shadow-md w-80"
       >
+        {firstTimeLogin && (
+          <div className="mb-4 p-4 bg-yellow-100 text-yellow-800 text-sm font-medium rounded">
+            Password reset is required on first login.
+          </div>
+        )}
         <h1 className="text-xl font-bold mb-4">Reset Password</h1>
         {errorMessage && <p className="text-red-500 mb-4">{errorMessage}</p>}
         <div className="mb-4">
@@ -148,5 +156,5 @@ export default function ResetPasswordPage() {
         </button>
       </form>
     </div>
-  );
+  );  
 }

@@ -64,21 +64,26 @@ export default function LoginPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password, rememberMe }),
       });
+  
+      const data = await res.json();
+      if (res.status === 403 && data.firstTimeLogin) {
+        console.log("Redirecting to reset password due to first-time login with ${data.resetToken}.");
+        // Redirect to reset-password with token
+        window.location.href = `/reset-password?token=${data.resetToken}&rememberMe=${rememberMe}&firstTimeLogin=${data.firstTimeLogin}`;
 
-      if (res.ok) {
-        console.log("Login successful, redirecting...");
+      } else if (res.ok) {
+        console.log("Login successful, redirecting to home.");
         window.location.href = "/";
       } else {
-        const { error } = await res.json();
-        setError(error || "Invalid username or password.");
-        console.error("Login failed:", error);
+        setError(data.error || "Invalid username or password.");
+        console.error("Login failed:", data.error);
       }
     } catch (err) {
       console.error("Network error during login:", err);
       setError("An unexpected error occurred.");
     }
   };
-
+  
   const handleForgotPassword = async () => {
     console.log("Forgot Password for email:", email);
     try {

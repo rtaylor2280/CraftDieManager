@@ -1,5 +1,4 @@
 // userVerify.js
-// Utility to verify user credentials (server-side only)
 import { neon } from "@neondatabase/serverless";
 import bcrypt from "bcryptjs";
 
@@ -36,6 +35,7 @@ export async function verifyUser(username, password) {
       firstName: user[0].first_name,
       lastName: user[0].last_name,
       active: user[0].active, // Include 'active' if needed
+      firstTimeLogin: user[0].first_time_login, // Include 'first_time_login'
     };
   } catch (err) {
     console.error("Error verifying user:", err.message);
