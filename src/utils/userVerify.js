@@ -13,7 +13,8 @@ const sql = neon(process.env.DATABASE_URL);
 export async function verifyUser(username, password) {
   try {
     // Fetch user from database
-    const user = await sql`SELECT * FROM users WHERE username = ${username} LIMIT 1`;
+    const user =
+      await sql`SELECT * FROM users WHERE username = ${username} LIMIT 1`;
 
     if (user.length === 0) {
       console.warn(`User not found: ${username}`);
@@ -50,8 +51,13 @@ export async function verifyUser(username, password) {
  */
 export async function fetchUserById(userId) {
   try {
-    // Fetch user from database
-    const users = await sql`SELECT id, username, role, active FROM users WHERE id = ${userId} LIMIT 1`;
+    // Fetch user with all necessary fields
+    const users = await sql`
+      SELECT id, username, role, active, first_name, last_name, first_time_login
+      FROM users
+      WHERE id = ${userId}
+      LIMIT 1
+    `;
 
     if (users.length === 0) {
       console.warn(`User not found for ID: ${userId}`);

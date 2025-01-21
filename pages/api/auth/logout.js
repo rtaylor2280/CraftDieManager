@@ -7,5 +7,6 @@ export default function handler(req, res) {
     "authToken=; HttpOnly; Path=/; Max-Age=0; Secure; SameSite=Strict"
   );
 
-  return res.status(200).json({ message: "Logged out" });
+  // Respond with success
+  return res.status(200).json({ success: true });
 }
