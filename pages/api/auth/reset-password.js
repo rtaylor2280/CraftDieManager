@@ -7,7 +7,7 @@ const SECRET = process.env.JWT_SECRET;
 
 export default async function handler(req, res) {
   if (req.method === "POST") {
-    const { token, newPassword, rememberMe } = req.body; // Accept rememberMe from the frontend
+    const { token, newPassword, rememberMe } = req.body;
 
     if (!token || !newPassword) {
       console.log("Missing token or newPassword in request body.");
@@ -18,7 +18,7 @@ export default async function handler(req, res) {
       console.log("Received token for password reset:", token);
 
       const user = await sql`
-        SELECT id, reset_token, reset_token_expires, first_name, last_name, username, role, NOW() AS current_time
+        SELECT id, reset_token, reset_token_expires, first_name, last_name, username, role, first_time_login, password_hash, NOW() AS current_time
         FROM users
         WHERE reset_token = ${token}
       `;
@@ -28,11 +28,28 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: "Invalid or expired token" });
       }
 
-      const { id, reset_token_expires, first_name, last_name, username, role } = user[0];
+      const {
+        id,
+        reset_token_expires,
+        first_name,
+        last_name,
+        username,
+        role,
+        first_time_login,
+        password_hash,
+      } = user[0];
 
       if (new Date(reset_token_expires) <= new Date()) {
         console.error("Token is expired.");
         return res.status(400).json({ error: "Token has expired" });
+      }
+
+      // Check if the new password matches the current password
+      const isSamePassword = await bcrypt.compare(newPassword, password_hash);
+
+      if (isSamePassword && first_time_login) {
+        console.error("New password cannot be the same as the current password for first-time login.");
+        return res.status(400).json({ error: "New password cannot be the same as your current password." });
       }
 
       // Hash the new password

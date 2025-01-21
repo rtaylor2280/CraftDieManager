@@ -3,11 +3,14 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Spinner from "@/components/Spinner";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 
 export default function ResetPasswordForm() {
   const [tokenValid, setTokenValid] = useState(null);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPasswords, setShowPasswords] = useState(false); // Unified show/hide state
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const searchParams = useSearchParams();
@@ -116,7 +119,7 @@ export default function ResetPasswordForm() {
         )}
         <h1 className="text-xl font-bold mb-4">Reset Password</h1>
         {errorMessage && <p className="text-red-500 mb-4">{errorMessage}</p>}
-        <div className="mb-4">
+        <div className="mb-4 relative">
           <label
             htmlFor="newPassword"
             className="block text-gray-700 font-medium mb-2"
@@ -125,14 +128,21 @@ export default function ResetPasswordForm() {
           </label>
           <input
             id="newPassword"
-            type="password"
+            type={showPasswords ? "text" : "password"}
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            className="w-full p-2 border rounded text-black"
+            className="w-full p-2 pr-10 border rounded text-black"
             required
           />
+          <button
+            type="button"
+            className="absolute right-3 top-14 transform -translate-y-1/2 text-gray-500 hover:text-black"
+            onClick={() => setShowPasswords((prev) => !prev)}
+          >
+            <FontAwesomeIcon icon={showPasswords ? faEyeSlash : faEye} />
+          </button>
         </div>
-        <div className="mb-4">
+        <div className="mb-4 relative">
           <label
             htmlFor="confirmPassword"
             className="block text-gray-700 font-medium mb-2"
@@ -141,20 +151,28 @@ export default function ResetPasswordForm() {
           </label>
           <input
             id="confirmPassword"
-            type="password"
+            type={showPasswords ? "text" : "password"}
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className="w-full p-2 border rounded text-black"
+            className="w-full p-2 pr-10 border rounded text-black"
             required
           />
+          <button
+            type="button"
+            className="absolute right-3 top-14 transform -translate-y-1/2 text-gray-500 hover:text-black"
+            onClick={() => setShowPasswords((prev) => !prev)}
+          >
+            <FontAwesomeIcon icon={showPasswords ? faEyeSlash : faEye} />
+          </button>
         </div>
+
         <button
           type="submit"
           className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 w-full"
         >
-          Reset Password
+          Submit Password
         </button>
       </form>
     </div>
-  );  
+  );
 }

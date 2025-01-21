@@ -13,31 +13,49 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await fetch("/api/auth/verify", { method: "GET", credentials: "include" });
-        
-        // Check if the response is okay and parse the JSON response
-        const data = res.ok ? await res.json() : null;
+        const res = await fetch("/api/auth/verify", {
+          method: "GET",
+          credentials: "include",
+        });
 
-        if (data.authenticated) {
+        if (!res.ok) {
+          console.error("Auth Verify Failed:", res.statusText);
+          setIsAuthenticated(false);
+          setUser(null);
+          return;
+        }
+
+        const data = await res.json();
+        console.log("Auth Verify Response:", data);
+
+        if (data?.authenticated) {
           setIsAuthenticated(true);
-          setUser(data); // Store user details
+          setUser({
+            userId: data.userId,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            role: data.role,
+          });
         } else {
           setIsAuthenticated(false);
           setUser(null);
         }
       } catch (err) {
-        console.error("Error verifying auth:", err);
+        console.error("Error in Auth Verification:", err);
         setIsAuthenticated(false);
         setUser(null);
       } finally {
         setLoading(false);
       }
     };
+
     checkAuth();
   }, []);
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, loading, setIsAuthenticated }}>
+    <AuthContext.Provider
+      value={{ isAuthenticated, user, loading, setIsAuthenticated, setUser }}
+    >
       {children}
     </AuthContext.Provider>
   );
