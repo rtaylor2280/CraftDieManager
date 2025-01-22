@@ -27,7 +27,6 @@ export function AuthProvider({ children }) {
         }
 
         const data = await res.json();
-        console.log("Auth Verify Response:", data);
 
         if (data?.authenticated) {
           setIsAuthenticated(true);

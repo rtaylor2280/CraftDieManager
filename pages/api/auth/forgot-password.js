@@ -1,13 +1,12 @@
 import { neon } from "@neondatabase/serverless";
 import { v4 as uuidv4 } from "uuid";
 
-const sql = neon(process.env.DATABASE_URL); // Initialize the Neon SQL client
+const sql = neon(process.env.DATABASE_URL);
 
 export default async function handler(req, res) {
   if (req.method === "POST") {
     const { email } = req.body;
 
-    // Generic response to avoid exposing email existence
     const genericResponse = {
       message: "If this email is registered, we have sent a reset link. Please check your inbox and spam folder.",
     };
@@ -20,24 +19,20 @@ export default async function handler(req, res) {
     try {
       console.log(`Forgot-password: Processing reset request for ${email}`);
 
-      // Check if the user exists
       const user = await sql`SELECT * FROM users WHERE email = ${email}`;
 
       if (user.length > 0) {
-        // Generate reset token and expiry
         const resetToken = uuidv4();
-        const tokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
-        console.log(`Forgot-password: tokenExpiry will be recorded as ${tokenExpiry}`);
+        const tokenExpiry = new Date(Date.now() + 60 * 60 * 1000);
 
-        // Update user record with token
         await sql`
           UPDATE users
           SET reset_token = ${resetToken}, reset_token_expires = ${tokenExpiry}
           WHERE email = ${email}
         `;
+
         console.log("Forgot-password: Reset token created and saved.");
 
-        // Send reset email
         const BASE_URL = process.env.BASE_URL || "http://localhost:3000";
         const resetLink = `${BASE_URL}/reset-password?token=${resetToken}`;
         const emailBody = getEmailBody(resetLink);
@@ -61,11 +56,10 @@ export default async function handler(req, res) {
         console.warn("Forgot-password: No user found for the provided email.");
       }
 
-      // Always return the generic response
       return res.status(200).json(genericResponse);
     } catch (error) {
       console.error("Forgot-password: Error during processing:", error);
-      return res.status(500).json(genericResponse); // Generic response for server errors
+      return res.status(500).json(genericResponse);
     }
   } else {
     res.setHeader("Allow", ["POST"]);
@@ -97,16 +91,16 @@ function getEmailBody(resetLink) {
         .btn {
           display: inline-block;
           padding: 10px 20px;
-          color: white !important;
-          background-color: #007BFF !important;
-          text-decoration: none !important;
+          color: white;
+          background-color: #007BFF;
+          text-decoration: none;
           border-radius: 5px;
-          border: 1px solid #007BFF; /* Ensures consistent border color */
-          font-weight: bold; /* Helps text stand out */
+          border: 1px solid #007BFF;
+          font-weight: bold;
         }
         .btn:hover {
-          background-color: #0056b3 !important;
-          border-color: #0056b3; /* Matches the hover background */
+          background-color: #0056b3;
+          border-color: #0056b3;
         }
         .footer {
           margin-top: 20px;
@@ -131,4 +125,3 @@ function getEmailBody(resetLink) {
     </html>
   `;
 }
-
