@@ -1,4 +1,4 @@
-import { Inter, Roboto_Mono } from "next/font/google"; // Replace with valid fonts
+import { Inter, Roboto_Mono } from "next/font/google";
 import { AuthProvider } from "@/context/AuthContext";
 import "../styles/globals.css";
 import Header from "../components/Header";
@@ -31,13 +31,8 @@ export default function RootLayout({ children }) {
         className={`${interFont.variable} ${robotoMonoFont.variable} antialiased flex flex-col min-h-screen`}
       >
         <AuthProvider>
-          {/* Global Header */}
           <Header />
-
-          {/* Main Content */}
-          <main className="flex-grow">{children}</main>
-
-          {/* Global Footer */}
+          <main className="flex flex-grow">{children}</main>
           <Footer />
         </AuthProvider>
       </body>
