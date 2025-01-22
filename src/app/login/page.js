@@ -114,7 +114,12 @@ export default function LoginPage() {
                 <div className="text-center">
                   <p className="mb-4 text-gray-700">{message}</p>
                   <button
-                    onClick={() => setShowForgotPassword(false)}
+                    onClick={() => {
+                      setShowForgotPassword(false); // Close the modal
+                      setEmail(""); // Clear the email input
+                      setEmailError(""); // Clear any email error
+                      setMessage(""); // Clear the message
+                    }}
                     className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
                   >
                     OK
@@ -145,7 +150,12 @@ export default function LoginPage() {
                     Send Reset Link
                   </button>
                   <button
-                    onClick={() => setShowForgotPassword(false)}
+                    onClick={() => {
+                      setShowForgotPassword(false); // Close the modal
+                      setEmail(""); // Clear the email input
+                      setEmailError(""); // Clear any email error
+                      setMessage(""); // Clear the message
+                    }}
                     className="w-full bg-gray-500 text-white p-2 rounded hover:bg-gray-600"
                   >
                     Cancel

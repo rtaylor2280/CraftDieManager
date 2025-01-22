@@ -27,7 +27,7 @@ export default async function handler(req, res) {
       const gmail = google.gmail({ version: "v1", auth: oauth2Client });
 
       const encodedMessage = Buffer.from(
-        `To: ${to}\r\nSubject: ${subject}\r\nContent-Type: text/html; charset=utf-8\r\n\r\n${body}`
+        `To: ${to}\r\nFrom: "CraftDieManager App" <craftdiemanager@gmail.com>\r\nSubject: ${subject}\r\nContent-Type: text/html; charset=utf-8\r\n\r\n${body}`
       )
         .toString("base64")
         .replace(/\+/g, "-")
