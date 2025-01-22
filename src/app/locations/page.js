@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { sortLocations } from "@/utils/sortLocations";
-import Spinner from "@/components/Spinner"; // Import the Spinner component
+import Spinner from "@/components/Spinner";
 
 export default function LocationsPage() {
   const [locations, setLocations] = useState([]);
@@ -27,7 +27,6 @@ export default function LocationsPage() {
     fetchLocations();
   }, []);
 
-  // Group locations by description
   const groupedLocations = locations.reduce((groups, location) => {
     const groupKey = location.description || "No Description";
     if (!groups[groupKey]) {
@@ -45,15 +44,15 @@ export default function LocationsPage() {
   };
 
   return (
-    <div className="min-h-screen p-8 bg-gray-50 font-sans">
-      <main className="max-w-4xl mx-auto">
+    <div className="flex flex-grow flex-col bg-gray-50 p-8">
+      <main className="max-w-4xl mx-auto w-full">
         <div className="flex items-center mb-6">
           <h2 className="text-2xl font-semibold text-gray-700">Locations</h2>
           {loading && (
-            <span className="ml-1">
+            <span className="ml-3">
               <Spinner
-              className="ml-3 w-5 h-5 text-gray-700"
-              aria-label="Loading"
+                className="ml-3 w-5 h-5 text-gray-700"
+                aria-label="Loading"
               />
             </span>
           )}

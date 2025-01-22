@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect } from "react";
+import { useRouter } from "next/navigation"; // Import useRouter
 
 const AuthContext = createContext();
 
@@ -34,7 +35,7 @@ export function AuthProvider({ children }) {
             userId: data.userId,
             firstName: data.firstName,
             lastName: data.lastName,
-            role: data.role,
+            role: data.role, // Ensure role is included in the response
           });
         } else {
           setIsAuthenticated(false);
@@ -54,7 +55,13 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ isAuthenticated, user, loading, setIsAuthenticated, setUser }}
+      value={{
+        isAuthenticated,
+        user,
+        loading,
+        setIsAuthenticated,
+        setUser,
+      }}
     >
       {children}
     </AuthContext.Provider>
@@ -64,4 +71,34 @@ export function AuthProvider({ children }) {
 // Hook for consuming AuthContext
 export function useAuth() {
   return useContext(AuthContext);
+}
+
+// Higher-Order Component for Protected Pages
+export function withProtectedPage(WrappedComponent, requiredRole) {
+  return function ProtectedPageWrapper(props) {
+    const { isAuthenticated, user, loading } = useAuth();
+    const router = useRouter(); // Ensure useRouter is imported and used
+
+    useEffect(() => {
+      if (!loading) {
+        if (!isAuthenticated) {
+          router.push("/login"); // Redirect to login if not authenticated
+        } else if (requiredRole && user?.role !== requiredRole) {
+          router.push("/403"); // Redirect to access denied page if role mismatch
+        }
+      }
+    }, [isAuthenticated, user, loading, requiredRole, router]);
+
+    // Show a loading message while authentication is being verified
+    if (
+      loading ||
+      !isAuthenticated ||
+      (requiredRole && user?.role !== requiredRole)
+    ) {
+      return <p>Loading...</p>;
+    }
+
+    // Render the wrapped component if authenticated and authorized
+    return <WrappedComponent {...props} />;
+  };
 }

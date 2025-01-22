@@ -10,7 +10,7 @@ export default function ResetPasswordForm() {
   const [tokenValid, setTokenValid] = useState(null);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPasswords, setShowPasswords] = useState(false); // Unified show/hide state
+  const [showPasswords, setShowPasswords] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const searchParams = useSearchParams();
@@ -19,7 +19,6 @@ export default function ResetPasswordForm() {
   const rememberMe = searchParams.get("rememberMe") === "true";
   const firstTimeLogin = searchParams.get("firstTimeLogin") === "true";
 
-  // Validate token on mount
   useEffect(() => {
     const validateToken = async () => {
       if (!token) {
@@ -30,7 +29,6 @@ export default function ResetPasswordForm() {
       }
 
       try {
-        console.log("Validating token...");
         const res = await fetch(`/api/auth/reset-password?token=${token}`);
         const data = await res.json();
         setTokenValid(res.ok && data.valid);
@@ -45,7 +43,6 @@ export default function ResetPasswordForm() {
     validateToken();
   }, [token]);
 
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
@@ -54,7 +51,6 @@ export default function ResetPasswordForm() {
     }
 
     try {
-      console.log("Submitting new password...");
       const res = await fetch("/api/auth/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -63,9 +59,8 @@ export default function ResetPasswordForm() {
 
       const data = await res.json();
       if (res.ok) {
-        console.log("Password updated successfully!");
         alert("Password updated successfully!");
-        window.location.href = "/"; // Redirect to home after successful reset
+        router.push("/");
       } else {
         setErrorMessage(data.error || "Failed to reset password");
       }
@@ -75,19 +70,17 @@ export default function ResetPasswordForm() {
     }
   };
 
-  // Render loading spinner
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="flex flex-grow items-center justify-center bg-gray-100">
         <Spinner />
       </div>
     );
   }
 
-  // Render error message if token is invalid
   if (!tokenValid) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+      <div className="flex flex-grow items-center justify-center bg-gray-100">
         <div className="bg-white p-6 rounded shadow-md w-80 text-center">
           <p className="text-red-500 text-lg font-bold mb-4">Link Expired</p>
           <p className="text-gray-700 mb-4">
@@ -105,9 +98,27 @@ export default function ResetPasswordForm() {
     );
   }
 
-  // Render reset password form
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      // Process only elements with the "include-enter" class
+      if (!e.target.className.includes("include-enter")) {
+        return; // Skip processing Enter key for other elements
+      }
+
+      e.preventDefault();
+      const form = e.target.form;
+      const index = Array.prototype.indexOf.call(form, e.target);
+
+      if (form.elements[index + 1]) {
+        form.elements[index + 1].focus();
+      } else {
+        form.requestSubmit();
+      }
+    }
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex flex-grow items-center justify-center bg-gray-100">
       <form
         onSubmit={handleSubmit}
         className="bg-white p-6 rounded shadow-md w-80"
@@ -117,7 +128,6 @@ export default function ResetPasswordForm() {
             Password reset is required on first login.
           </div>
         )}
-        <h1 className="text-xl font-bold mb-4">Reset Password</h1>
         {errorMessage && <p className="text-red-500 mb-4">{errorMessage}</p>}
         <div className="mb-4 relative">
           <label
@@ -138,6 +148,7 @@ export default function ResetPasswordForm() {
             type="button"
             className="absolute right-3 top-14 transform -translate-y-1/2 text-gray-500 hover:text-black"
             onClick={() => setShowPasswords((prev) => !prev)}
+            tabIndex={-1} // Excludes this button from the tab order
           >
             <FontAwesomeIcon icon={showPasswords ? faEyeSlash : faEye} />
           </button>
@@ -161,11 +172,11 @@ export default function ResetPasswordForm() {
             type="button"
             className="absolute right-3 top-14 transform -translate-y-1/2 text-gray-500 hover:text-black"
             onClick={() => setShowPasswords((prev) => !prev)}
+            tabIndex={-1} // Excludes this button from the tab order
           >
             <FontAwesomeIcon icon={showPasswords ? faEyeSlash : faEye} />
           </button>
         </div>
-
         <button
           type="submit"
           className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600 w-full"

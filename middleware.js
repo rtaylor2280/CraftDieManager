@@ -3,7 +3,6 @@ import { NextResponse } from "next/server";
 export function middleware(req) {
   const cookieStore = req.cookies;
   const token = cookieStore.get("authToken")?.value;
-  console.log("Token in Middleware:", token);
 
   // Redirect to login if no token is found
   if (!token) {
@@ -12,10 +11,17 @@ export function middleware(req) {
   }
 
   // Allow the request to proceed
+  console.log("Authorized user. Token found in cookies.");
   return NextResponse.next();
 }
 
 // Middleware applies only to protected routes
 export const config = {
-  matcher: ["/protected/:path*"], // Adjust as needed for your app
+  matcher: [
+    "/dies/:path*",
+    "/gallery/:path*",
+    "/locations/:path*",
+    "/protected/:path*",
+    "/",
+  ],
 };

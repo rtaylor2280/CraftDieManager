@@ -16,97 +16,95 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
   const [message, setMessage] = useState("");
-  const [isTyping, setIsTyping] = useState(false); // Track if the user is typing
-  const [typingTimeout, setTypingTimeout] = useState(null); // Timeout for validation delay
-  const [isEmailValid, setIsEmailValid] = useState(false); // Track email validity for the button
+  const [isTyping, setIsTyping] = useState(false);
+  const [typingTimeout, setTypingTimeout] = useState(null);
+  const [isEmailValid, setIsEmailValid] = useState(false);
 
   useEffect(() => {
     setReadyToRender(true);
-    console.log("Component initialized.");
   }, []);
 
-  const validateEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
+  const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const handleEmailChange = (e) => {
     const value = e.target.value;
     setEmail(value);
-
-    // Instant validation for the button
     setIsEmailValid(validateEmail(value));
 
-    setIsTyping(true); // User is typing
+    setIsTyping(true);
 
-    // Clear any existing timeout
     if (typingTimeout) clearTimeout(typingTimeout);
 
-    // Set a new timeout to validate after the user stops typing
     setTypingTimeout(
       setTimeout(() => {
-        setIsTyping(false); // User has stopped typing
-        if (value && !validateEmail(value)) {
-          setEmailError("Invalid email format");
-        } else {
-          setEmailError(""); // Clear error if valid
-        }
-      }, 3000) // Adjust delay as needed
+        setIsTyping(false);
+        setEmailError(
+          value && !validateEmail(value) ? "Invalid email format" : ""
+        );
+      }, 3000)
     );
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    console.log("Attempting login for:", username);
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password, rememberMe }),
       });
-  
+
       const data = await res.json();
       if (res.status === 403 && data.firstTimeLogin) {
-        console.log("Redirecting to reset password due to first-time login with ${data.resetToken}.");
-        // Redirect to reset-password with token
         window.location.href = `/reset-password?token=${data.resetToken}&rememberMe=${rememberMe}&firstTimeLogin=${data.firstTimeLogin}`;
-
       } else if (res.ok) {
-        console.log("Login successful, redirecting to home.");
         window.location.href = "/";
       } else {
         setError(data.error || "Invalid username or password.");
-        console.error("Login failed:", data.error);
       }
     } catch (err) {
-      console.error("Network error during login:", err);
       setError("An unexpected error occurred.");
     }
   };
-  
+
   const handleForgotPassword = async () => {
-    console.log("Forgot Password for email:", email);
     try {
-      const res = await fetch("/api/auth/forgot-password", {
+      await fetch("/api/auth/forgot-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
-
-      console.log("Reset link sent for email:", email);
       setMessage(
         `If this email (${email}) is registered, we will send a reset link. Please check your inbox and spam folder.`
       );
-    } catch (err) {
-      console.error("Forgot Password network error:", err);
+    } catch {
       setMessage(
         "If this email is registered, we have sent a reset link. Please check your inbox and spam folder."
       );
     }
   };
 
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      // Process only elements with the "include-enter" class
+      if (!e.target.className.includes("include-enter")) {
+        return; // Skip processing Enter key for other elements
+      }
+
+      e.preventDefault();
+      const form = e.target.form;
+      const index = Array.prototype.indexOf.call(form, e.target);
+
+      if (form.elements[index + 1]) {
+        form.elements[index + 1].focus();
+      } else {
+        form.requestSubmit();
+      }
+    }
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className="flex flex-grow items-center justify-center bg-gray-100">
       {readyToRender ? (
         <div className="flex flex-col items-center">
           {showForgotPassword ? (
@@ -116,10 +114,7 @@ export default function LoginPage() {
                 <div className="text-center">
                   <p className="mb-4 text-gray-700">{message}</p>
                   <button
-                    onClick={() => {
-                      console.log("Redirecting to login after Forgot Password.");
-                      window.location.href = "/";
-                    }}
+                    onClick={() => setShowForgotPassword(false)}
                     className="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
                   >
                     OK
@@ -140,7 +135,7 @@ export default function LoginPage() {
                   )}
                   <button
                     onClick={handleForgotPassword}
-                    disabled={!email || !isEmailValid} // Separate condition for button enablement
+                    disabled={!email || !isEmailValid}
                     className={`w-full p-2 rounded mb-2 ${
                       email && isEmailValid
                         ? "bg-green-500 text-white hover:bg-green-600"
@@ -150,10 +145,7 @@ export default function LoginPage() {
                     Send Reset Link
                   </button>
                   <button
-                    onClick={() => {
-                      console.log("Cancel Forgot Password modal.");
-                      setShowForgotPassword(false);
-                    }}
+                    onClick={() => setShowForgotPassword(false)}
                     className="w-full bg-gray-500 text-white p-2 rounded hover:bg-gray-600"
                   >
                     Cancel
@@ -192,10 +184,8 @@ export default function LoginPage() {
                 <button
                   type="button"
                   className="absolute right-3 top-5 transform -translate-y-1/2 text-gray-500 hover:text-black"
-                  onClick={() => {
-                    console.log("Toggling password visibility.");
-                    setShowPassword((prev) => !prev);
-                  }}
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  tabIndex={-1} // Excludes this button from the tab order
                 >
                   <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
                 </button>
@@ -214,7 +204,7 @@ export default function LoginPage() {
               </div>
               <button
                 type="submit"
-                disabled={!username || !password} // Disable until both fields are filled
+                disabled={!username || !password}
                 className={`w-full p-2 rounded ${
                   username && password
                     ? "bg-blue-500 text-white hover:bg-blue-600"
@@ -225,10 +215,7 @@ export default function LoginPage() {
               </button>
               <p
                 className="text-center mt-4 text-blue-500 cursor-pointer"
-                onClick={() => {
-                  console.log("Opening Forgot Password modal.");
-                  setShowForgotPassword(true);
-                }}
+                onClick={() => setShowForgotPassword(true)}
               >
                 Forgot Password?
               </p>

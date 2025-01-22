@@ -4,14 +4,16 @@
 
 /* Root Variables */
 :root {
-  --background: #f9fafb;
+  --background: #ffffff; /* Global white background */
   --header-footer-bg: linear-gradient(to right, #1e293b, #374151);
   --button-bg: #3b82f6;
   --button-hover-bg: #2563eb;
-  --button-text-color: white;
+  --button-text-color: #ffffff; /* Button text color */
+  --text-color: #000000; /* Global text color set to black */
 }
 
-/* Dark Mode */
+/* Commented out Dark Mode for now */
+/*
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #1e293b;
@@ -19,12 +21,14 @@
     --button-bg: #60a5fa;
     --button-hover-bg: #3b82f6;
     --button-text-color: #ffffff;
+    --text-color: #f9fafb; 
   }
 }
+*/
 
 body {
-  background-color: var(--background);
-  color: var(--button-text-color);
+  background-color: var(--background); /* Apply white background globally */
+  color: var(--text-color); /* Apply global black text color */
   font-family: "Geist", Arial, sans-serif;
 }
 
