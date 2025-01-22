@@ -85,6 +85,7 @@ function getEmailBody(resetLink) {
           color: #333;
           background-color: #f9f9f9;
           padding: 20px;
+          text-align: center; /* Centers text in the email body */
         }
         .email-container {
           max-width: 600px;
@@ -93,6 +94,14 @@ function getEmailBody(resetLink) {
           padding: 20px;
           border-radius: 8px;
           box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+          text-align: center; /* Ensures all content inside is centered */
+        }
+        .email-logo {
+          margin-bottom: 20px;
+        }
+        .email-logo img {
+          max-height: 120px; /* Adjust logo size */
+          width: auto;
         }
         .btn {
           display: inline-block;
@@ -101,12 +110,13 @@ function getEmailBody(resetLink) {
           background-color: #007BFF !important;
           text-decoration: none !important;
           border-radius: 5px;
-          border: 1px solid #007BFF; /* Ensures consistent border color */
-          font-weight: bold; /* Helps text stand out */
+          border: 1px solid #007BFF;
+          font-weight: bold;
+          margin: 20px auto;
         }
         .btn:hover {
           background-color: #0056b3 !important;
-          border-color: #0056b3; /* Matches the hover background */
+          border-color: #0056b3;
         }
         .footer {
           margin-top: 20px;
@@ -117,6 +127,12 @@ function getEmailBody(resetLink) {
     </head>
     <body>
       <div class="email-container">
+        <div class="email-logo">
+          <img
+            src="https://res.cloudinary.com/dor8hisms/image/upload/v1737569998/CraftDieManagerLogo_2_utpvtx.png"
+            alt="Craft Die Manager Logo"
+          />
+        </div>
         <h2>Password Reset Request</h2>
         <p>You requested a password reset. Click the link below to reset your password:</p>
         <p>
@@ -131,4 +147,3 @@ function getEmailBody(resetLink) {
     </html>
   `;
 }
-

@@ -27,7 +27,7 @@ export default async function handler(req, res) {
       const gmail = google.gmail({ version: "v1", auth: oauth2Client });
 
       const encodedMessage = Buffer.from(
-        `To: ${to}\r\nSubject: ${subject}\r\nContent-Type: text/html; charset=utf-8\r\n\r\n${body}`
+        `To: ${to}\r\nFrom: "CraftDieManager App" <craftdiemanager@gmail.com>\r\nSubject: ${subject}\r\nContent-Type: text/html; charset=utf-8\r\n\r\n${body}`
       )
         .toString("base64")
         .replace(/\+/g, "-")
@@ -52,29 +52,3 @@ export default async function handler(req, res) {
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
-
-/********************Example************************/
-/*
-    // Send email using the send-email route
-    try {
-      const emailResponse = await fetch(`${BASE_URL}/api/send-email`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          to: "craftdiemanager@gmail.com",
-          subject: `Login Report - ${user.username}`,
-          body: `The user "${user.username}" logged in at ${new Date().toLocaleString()}.`,
-        }),
-      });
-
-      if (!emailResponse.ok) {
-        console.error("Failed to send email via send-email route:", await emailResponse.text());
-      } else {
-        console.log("Login email sent successfully.");
-      }
-    } catch (error) {
-      console.error("Error calling send-email route:", error.message);
-    }
-/****************************************************/
