@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCircleXmark } from "@fortawesome/free-solid-svg-icons";
+import { faCircleXmark, faFile } from "@fortawesome/free-solid-svg-icons";
 import Spinner from "@/components/Spinner";
 
 export default function LazyImageGrid({ fileIds = [], onRemove, deletable = true }) {
@@ -35,7 +35,7 @@ export default function LazyImageGrid({ fileIds = [], onRemove, deletable = true
 
   useEffect(() => {
     const batchLoadImages = async () => {
-      const batchSize = 5; // Number of images to load per batch
+      const batchSize = 20; // Number of images to load per batch
       for (let i = 0; i < fileIds.length; i += batchSize) {
         const batch = fileIds.slice(i, i + batchSize);
         setLoadingIds((prev) => new Set([...prev, ...batch])); // Mark batch as loading
@@ -88,7 +88,7 @@ export default function LazyImageGrid({ fileIds = [], onRemove, deletable = true
               />
             ) : (
               <div className="flex justify-center items-center h-40 bg-white rounded">
-                <p className="text-gray-500">batching..</p>
+                <p className="text-gray-500"><FontAwesomeIcon icon={faFile} size="lg" /></p>
               </div>
             )}
             {deletable && (

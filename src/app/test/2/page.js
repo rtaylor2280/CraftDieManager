@@ -1,38 +1,53 @@
 "use client";
 
 import LazyImageGrid from "@/components/LazyImageGrid";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function TestPage() {
-  const [imageFileIds, setImageFileIds] = useState([
-    "1C8UUNge-NQt3C1s0oxmuIcdTFDtHSNOm",
-    "1kBdKZaLsMGaR-FROJmRacvq348YGzW7j",
-    "1ZXLjxlFUNMbX1YjkrmZp9SN9TNAsgh-P",
-    "19YFenidk7dvqhbTmb7QiJzPskU_MuC18",
-    "1zB8ztlR_X98nsxUJBL0mm19NA9zVngfr",
-    "1uad62BNgfiNwY6AMrJE9zcgY4f7sk9_r",
-    "1bbmLL_pwkS-8qqKfO1EKOY91HbS0irDO",
-    "13aZqVcu_L65pe8_H2bBEu3-y7L76aE7o",
-    "19TyCVUxDVrCkBvZADJ0sBG_tY5n_1Vcv",
-    "1t8REDY1Hr6-hbYe3yfouGD9IlUiiP0CT",
-    "13n-IdPD1CTKEDUa8s0I3XFk8kEC928DN",
-    "1-7qZdn6LWR08se-IgVlwIhWSy2WUIq3G",
-    "1d4rOHkaSIHjEEu6xSorF2Uzjn4ioo1JA",
-    "1goukd97Vc1JQY_7MgRR3l-DI06pAcCYV",
-    "1bYjYeKg5aEMojJLgjcq-P1DuM6hFGozQ",
-    "1OepOHPBZgR3q2pYa_peOdGx2Yu3PMlT_",
-  ]);
+  const [imageFileIds, setImageFileIds] = useState([]);
   const [removedIds, setRemovedIds] = useState([]);
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const fetchFolderFiles = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/get-folder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ folder: "DIES" }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch folder files.");
+      }
+
+      const data = await response.json();
+      setImageFileIds(data.files.map((file) => file.id)); // Extract file IDs
+    } catch (err) {
+      console.error("Error fetching folder files:", err.message);
+      setError("Error fetching folder files. Check console for details.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleRemoveImage = (id) => {
     setRemovedIds((prev) => [...prev, id]);
     setImageFileIds((prev) => prev.filter((fileId) => fileId !== id));
   };
 
+  // Load the folder files on page load
+  useEffect(() => {
+    fetchFolderFiles();
+  }, []);
+
   return (
     <div className="flex flex-grow items-center justify-center bg-gray-100">
       <div className="min-h-screen bg-gray-100 p-6">
         <h1 className="text-2xl font-bold mb-6">Test LazyImageGrid</h1>
+        {isLoading && <p>Loading files...</p>}
+        {error && <p className="text-red-500 mb-4">{error}</p>}
         <LazyImageGrid
           fileIds={Array.isArray(imageFileIds) ? imageFileIds : []}
           onRemove={handleRemoveImage}
