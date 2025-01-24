@@ -34,22 +34,26 @@ export default function TestPage() {
       <div className="min-h-screen bg-gray-100 p-6">
         <h1 className="text-2xl font-bold mb-6">Test LazyImageGrid</h1>
         <LazyImageGrid
-          fileIds={imageFileIds}
+          fileIds={Array.isArray(imageFileIds) ? imageFileIds : []}
           onRemove={handleRemoveImage}
           deletable={true}
         />
         <div className="mt-6">
           <h2 className="text-xl font-bold">Removed IDs:</h2>
           <ul className="list-disc pl-6">
-            {removedIds.map((id) => (
-              <li key={id}>{id}</li>
-            ))}
+            {Array.isArray(removedIds) ? (
+              removedIds.map((id) => <li key={id}>{id}</li>)
+            ) : (
+              <li>No IDs removed</li>
+            )}
           </ul>
           <h2 className="text-xl font-bold mt-4">Remaining IDs:</h2>
           <ul className="list-disc pl-6">
-            {imageFileIds.map((id) => (
-              <li key={id}>{id}</li>
-            ))}
+            {Array.isArray(imageFileIds) ? (
+              imageFileIds.map((id) => <li key={id}>{id}</li>)
+            ) : (
+              <li>No remaining IDs</li>
+            )}
           </ul>
         </div>
       </div>
