@@ -65,7 +65,7 @@ export default function LazyImageGrid({ fileIds, onRemove, deletable = true }) {
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {fileIds.map((id) => {
         const image = images.find((img) => img.id === id);
         const isLoading = loadingIds.has(id);
@@ -83,12 +83,12 @@ export default function LazyImageGrid({ fileIds, onRemove, deletable = true }) {
               <img
                 src={`data:${image.mimeType};base64,${image.data}`}
                 alt={`Image ${id}`}
-                className="max-w-full h-auto max-h-40"
+                className="w-full h-auto max-h-60"
                 style={{ objectFit: "contain" }}
               />
             ) : (
-              <div className="flex justify-center items-center h-40 bg-gray-200 rounded">
-                <p className="text-gray-500">Failed to load</p>
+              <div className="flex justify-center items-center h-40 bg-white rounded">
+                <p className="text-gray-500">batching..</p>
               </div>
             )}
             {deletable && (
