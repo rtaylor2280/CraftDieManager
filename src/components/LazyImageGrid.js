@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleXmark } from "@fortawesome/free-solid-svg-icons";
 import Spinner from "@/components/Spinner";
 
-export default function LazyImageGrid({ fileIds, onRemove, deletable = true }) {
+export default function LazyImageGrid({ fileIds = [], onRemove, deletable = true }) {
   const [images, setImages] = useState([]);
   const [loadingIds, setLoadingIds] = useState(new Set()); // Track loading IDs
 
