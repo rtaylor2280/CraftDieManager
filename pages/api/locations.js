@@ -1,4 +1,3 @@
-
 import { neon } from "@neondatabase/serverless";
 
 export default async function handler(req, res) {
@@ -16,14 +15,28 @@ export default async function handler(req, res) {
       `;
       res.status(201).json({ message: "Location added successfully" });
     } else if (req.method === "PUT") {
-      const { id, name, description, primary_image, additional_images } = req.body;
-      await sql`
-        UPDATE locations
-        SET name = ${name}, description = ${description},
-            primary_image = ${primary_image}, additional_images = ${additional_images}
-        WHERE id = ${id}
-      `;
-      res.status(200).json({ message: "Location updated successfully" });
+      const { id, name, description, primary_image } = req.body;
+
+      if (!id) {
+        return res
+          .status(400)
+          .json({ error: "ID is required for updating a location." });
+      }
+
+      try {
+        await sql`
+          UPDATE locations
+          SET
+            name = ${name},
+            description = ${description || null},
+            primary_image = ${primary_image || null}
+          WHERE id = ${id}
+        `;
+        res.status(200).json({ message: "Location updated successfully" });
+      } catch (error) {
+        console.error("Database query failed:", error);
+        res.status(500).json({ error: "Failed to update location." });
+      }
     } else if (req.method === "DELETE") {
       const { id } = req.body;
       await sql`DELETE FROM locations WHERE id = ${id}`;

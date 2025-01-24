@@ -17,6 +17,7 @@ export default function Home() {
           <Button text="Manage Dies" href="/dies" bgColor="bg-blue-500" />
           <Button text="Manage Locations" href="/locations" bgColor="bg-green-500" />
           <Button text="View Gallery" href="/gallery" bgColor="bg-purple-500" />
+          <Button text="Add New Die" href="/add-die" bgColor="bg-orange-500" />
         </div>
       </section>
     </div>
