@@ -1,47 +1,86 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCircleXmark, faFile } from "@fortawesome/free-solid-svg-icons";
 
-export default function ImageUploader({ label, onFileChange, allowMultiple }) {
+export default function ImageUploader({
+  label,
+  onFileChange,
+  allowMultiple,
+  clear,
+}) {
   const [selectedFiles, setSelectedFiles] = useState([]);
+  const [thumbnails, setThumbnails] = useState([]);
+  const [inputKey, setInputKey] = useState(Date.now()); // Key for forcing input re-render
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
     setSelectedFiles(files);
     onFileChange(allowMultiple ? files : files[0]); // Send single file or array based on allowMultiple
+
+    // Generate thumbnails for image files
+    const fileReaders = files.map((file) => {
+      if (!file.type.startsWith("image/")) return null; // Skip non-image files
+      const reader = new FileReader();
+      reader.onload = () => {
+        setThumbnails((prev) => [...prev, { file, src: reader.result }]);
+      };
+      reader.readAsDataURL(file);
+      return reader;
+    });
+
+    // Clean up unused readers
+    return () => fileReaders.forEach((reader) => reader?.abort());
   };
 
   const handleRemoveFile = (index) => {
     const updatedFiles = selectedFiles.filter((_, i) => i !== index);
+    const updatedThumbnails = thumbnails.filter((_, i) => i !== index);
     setSelectedFiles(updatedFiles);
+    setThumbnails(updatedThumbnails);
     onFileChange(allowMultiple ? updatedFiles : updatedFiles[0] || null); // Update parent component
   };
 
+  useEffect(() => {
+    if (clear && selectedFiles.length > 0) {
+      setSelectedFiles([]);
+      setThumbnails([]);
+      setInputKey(Date.now()); // Reset file input field
+      onFileChange(allowMultiple ? [] : null); // Notify parent only when necessary
+    }
+  }, [clear]); // Only depend on `clear`
+
   return (
     <div className="mb-4">
-      <label className="block text-gray-700 text-sm font-bold mb-2">{label}</label>
+      <label className="block text-gray-700 text-sm font-bold mb-2">
+        {label}
+      </label>
       <input
+        key={inputKey} // Force re-render by changing the key
         type="file"
         onChange={handleFileChange}
         multiple={allowMultiple}
         className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
       />
-      {selectedFiles.length > 0 && (
-        <div className="mt-2">
-          <ul>
-            {selectedFiles.map((file, index) => (
-              <li key={index} className="flex items-center justify-between text-sm text-gray-700">
-                <span>{file.name}</span>
-                <button
-                  type="button"
-                  onClick={() => handleRemoveFile(index)}
-                  className="text-red-500 hover:underline"
-                >
-                  Remove
-                </button>
-              </li>
-            ))}
-          </ul>
+      {thumbnails.length > 0 && (
+        <div className="mt-2 grid grid-cols-3 gap-2">
+          {thumbnails.map((thumb, index) => (
+            <div key={index} className="relative">
+              <img
+                src={thumb.src}
+                alt={thumb.file.name}
+                className="w-full h-auto max-h-24 object-cover rounded border"
+              />
+              <button
+                type="button"
+                onClick={() => handleRemove(id)}
+                className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
+              >
+                <FontAwesomeIcon icon={faCircleXmark} size="lg" />
+              </button>
+            </div>
+          ))}
         </div>
       )}
     </div>

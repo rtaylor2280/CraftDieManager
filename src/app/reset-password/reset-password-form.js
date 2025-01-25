@@ -59,14 +59,34 @@ export default function ResetPasswordForm() {
 
       const data = await res.json();
       if (res.ok) {
+        setErrorMessage("");
         alert("Password updated successfully!");
-        router.push("/");
+        router.push('/');
       } else {
         setErrorMessage(data.error || "Failed to reset password");
       }
     } catch (error) {
       console.error("Error resetting password:", error);
       setErrorMessage("An unexpected error occurred");
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      // Process only elements with the "include-enter" class
+      if (!e.target.className.includes("include-enter")) {
+        return; // Skip processing Enter key for other elements
+      }
+
+      e.preventDefault();
+      const form = e.target.form;
+      const index = Array.prototype.indexOf.call(form.elements, e.target);
+
+      if (form.elements[index + 1]) {
+        form.elements[index + 1].focus();
+      } else {
+        form.requestSubmit();
+      }
     }
   };
 
@@ -98,25 +118,6 @@ export default function ResetPasswordForm() {
     );
   }
 
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      // Process only elements with the "include-enter" class
-      if (!e.target.className.includes("include-enter")) {
-        return; // Skip processing Enter key for other elements
-      }
-
-      e.preventDefault();
-      const form = e.target.form;
-      const index = Array.prototype.indexOf.call(form, e.target);
-
-      if (form.elements[index + 1]) {
-        form.elements[index + 1].focus();
-      } else {
-        form.requestSubmit();
-      }
-    }
-  };
-
   return (
     <div className="flex flex-grow items-center justify-center bg-gray-100">
       <form
@@ -141,14 +142,15 @@ export default function ResetPasswordForm() {
             type={showPasswords ? "text" : "password"}
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            className="w-full p-2 pr-10 border rounded text-black"
+            onKeyDown={handleKeyDown}
+            className="w-full p-2 pr-10 border rounded text-black include-enter"
             required
           />
           <button
             type="button"
             className="absolute right-3 top-14 transform -translate-y-1/2 text-gray-500 hover:text-black"
             onClick={() => setShowPasswords((prev) => !prev)}
-            tabIndex={-1} // Excludes this button from the tab order
+            tabIndex={-1}
           >
             <FontAwesomeIcon icon={showPasswords ? faEyeSlash : faEye} />
           </button>
@@ -165,14 +167,15 @@ export default function ResetPasswordForm() {
             type={showPasswords ? "text" : "password"}
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className="w-full p-2 pr-10 border rounded text-black"
+            onKeyDown={handleKeyDown}
+            className="w-full p-2 pr-10 border rounded text-black include-enter"
             required
           />
           <button
             type="button"
             className="absolute right-3 top-14 transform -translate-y-1/2 text-gray-500 hover:text-black"
             onClick={() => setShowPasswords((prev) => !prev)}
-            tabIndex={-1} // Excludes this button from the tab order
+            tabIndex={-1}
           >
             <FontAwesomeIcon icon={showPasswords ? faEyeSlash : faEye} />
           </button>

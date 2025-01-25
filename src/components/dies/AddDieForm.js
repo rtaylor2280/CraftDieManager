@@ -4,10 +4,10 @@ import { useState, useEffect } from "react";
 import ImageUploader from "@/components/dies/ImageUploader";
 import { StarWithText } from "@/components/Spinner";
 
-export default function AddDieForm() {
-  const [name, setName] = useState(""); // Stores the name of the die, required for submission
-  const [description, setDescription] = useState(""); // Holds the description of the die, optional field
-  const [locationId, setLocationId] = useState(""); // Tracks the selected location for the die
+export default function AddDieForm({ onSuccess }) { // Accept onSuccess as a prop
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [locationId, setLocationId] = useState("");
   const [primaryImageFile, setPrimaryImageFile] = useState(null);
   const [additionalFiles, setAdditionalFiles] = useState([]);
   const [locations, setLocations] = useState([]);
@@ -15,9 +15,7 @@ export default function AddDieForm() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
-  // Fetch locations when component mounts
   useEffect(() => {
-    // Fetches available locations when the component mounts
     const fetchLocations = async () => {
       try {
         const res = await fetch("/api/locations");
@@ -35,12 +33,10 @@ export default function AddDieForm() {
   }, []);
 
   const handleSubmit = async (e) => {
-    // Handles the form submission for creating a new die
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      // Step 1: Create a new die record
       const dieResponse = await fetch("/api/dies", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -58,7 +54,6 @@ export default function AddDieForm() {
 
       const { id: dieId } = await dieResponse.json();
 
-      // Step 2: Upload primary image (if any)
       if (primaryImageFile) {
         const primaryFileIds = await uploadFiles([primaryImageFile], {
           folder: "DIES",
@@ -69,7 +64,6 @@ export default function AddDieForm() {
         await updateDie(dieId, { primary_image: primaryFileIds[0] });
       }
 
-      // Step 3: Upload additional files (if any)
       if (additionalFiles.length > 0) {
         const additionalFileIds = await uploadFiles(additionalFiles, {
           folder: "DIES",
@@ -80,9 +74,8 @@ export default function AddDieForm() {
         await updateDie(dieId, { additional_images: additionalFileIds });
       }
 
-      // Step 4: Redirect to edit form
       setMessage("Die created successfully!");
-      if (onSuccess) onSuccess(dieId); // Trigger parent callback for navigation
+      if (onSuccess) onSuccess(dieId); // Use onSuccess prop to trigger navigation
     } catch (error) {
       console.error("Error submitting form:", error);
       setError(error.message);
@@ -92,7 +85,6 @@ export default function AddDieForm() {
   };
 
   const uploadFiles = async (files, options) => {
-    // Handles file uploads to the server for primary and additional files
     const { folder, prefix, startIndex } = options;
 
     const formData = new FormData();
@@ -118,7 +110,6 @@ export default function AddDieForm() {
   };
 
   const updateDie = async (dieId, updates) => {
-    // Updates the die record with the given updates, such as file IDs
     const res = await fetch("/api/dies", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -164,20 +155,10 @@ export default function AddDieForm() {
             value={description}
             onChange={(e) => {
               setDescription(e.target.value);
-
-              // Adjust the height of the textarea
-              const target = e.target;
-              target.style.height = "auto"; // Reset height to calculate the new height
-              target.style.height = `${target.scrollHeight}px`; // Dynamically adjust based on content
-            }}
-            onInput={(e) => {
-              // Adjust height when input is loaded
-              const target = e.target;
-              target.style.height = "auto";
-              target.style.height = `${target.scrollHeight}px`; // Dynamically adjust based on content
+              e.target.style.height = "auto";
+              e.target.style.height = `${e.target.scrollHeight}px`;
             }}
             className="w-full p-2 border rounded text-black resize-none overflow-hidden"
-            style={{ overflow: "hidden" }}
           />
         </div>
 

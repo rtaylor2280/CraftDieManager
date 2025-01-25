@@ -2,12 +2,23 @@
 
 import { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCircleXmark, faFile } from "@fortawesome/free-solid-svg-icons";
+import {
+  faCircleXmark,
+  faFile,
+  faBan,
+} from "@fortawesome/free-solid-svg-icons";
 import Spinner from "@/components/Spinner";
 
-export default function LazyImageGrid({ fileIds = [], onRemove, deletable = true }) {
+export default function LazyImageGrid({
+  fileIds = [],
+  removedIds = [],
+  onRemove,
+  onRestore,
+  deletable = true,
+}) {
   const [images, setImages] = useState([]);
-  const [loadingIds, setLoadingIds] = useState(new Set()); // Track loading IDs
+  const [loadingIds, setLoadingIds] = useState(new Set());
+  const [localRemovedIds, setLocalRemovedIds] = useState([]); // Track removed IDs as an array
 
   const loadImages = async (ids) => {
     try {
@@ -35,24 +46,24 @@ export default function LazyImageGrid({ fileIds = [], onRemove, deletable = true
 
   useEffect(() => {
     const batchLoadImages = async () => {
-      const batchSize = 20; // Number of images to load per batch
+      const batchSize = 20;
       for (let i = 0; i < fileIds.length; i += batchSize) {
         const batch = fileIds.slice(i, i + batchSize);
-        setLoadingIds((prev) => new Set([...prev, ...batch])); // Mark batch as loading
+        setLoadingIds((prev) => new Set([...prev, ...batch]));
 
         const loadedImages = await loadImages(batch);
         setImages((prev) => [
-          ...prev.filter((img) => !batch.includes(img.id)), // Remove duplicates
+          ...prev.filter((img) => !batch.includes(img.id)),
           ...loadedImages,
         ]);
 
         setLoadingIds((prev) => {
           const updated = new Set(prev);
-          batch.forEach((id) => updated.delete(id)); // Remove loaded IDs from loading state
+          batch.forEach((id) => updated.delete(id));
           return updated;
         });
 
-        await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate delay
+        await new Promise((resolve) => setTimeout(resolve, 500));
       }
     };
 
@@ -60,8 +71,14 @@ export default function LazyImageGrid({ fileIds = [], onRemove, deletable = true
   }, [fileIds]);
 
   const handleRemove = (id) => {
+    setLocalRemovedIds((prev) => [...prev, id]); // Add to removed list
     if (onRemove) onRemove(id);
-    setImages((prev) => prev.filter((img) => img.id !== id));
+  };
+
+  const handleRestore = (id) => {
+    console.log(`Restoring image with ID: ${id}`);
+    setLocalRemovedIds((prev) => prev.filter((removedId) => removedId !== id)); // Remove from local list
+    if (onRestore) onRestore(id); // Notify parent
   };
 
   return (
@@ -69,11 +86,15 @@ export default function LazyImageGrid({ fileIds = [], onRemove, deletable = true
       {fileIds.map((id) => {
         const image = images.find((img) => img.id === id);
         const isLoading = loadingIds.has(id);
+        const isRemoved =
+          removedIds.includes(id) || localRemovedIds.includes(id); // Use prop or local state
 
         return (
           <div
             key={id}
-            className="relative flex flex-col items-center bg-white p-2 rounded shadow"
+            className={`relative flex flex-col items-center bg-white p-2 rounded shadow ${
+              isRemoved ? "opacity-50 pointer-events-none" : ""
+            }`}
           >
             {isLoading ? (
               <div className="flex justify-center items-center h-40">
@@ -88,10 +109,26 @@ export default function LazyImageGrid({ fileIds = [], onRemove, deletable = true
               />
             ) : (
               <div className="flex justify-center items-center h-40 bg-white rounded">
-                <p className="text-gray-500"><FontAwesomeIcon icon={faFile} size="lg" /></p>
+                <p className="text-gray-500">
+                  <FontAwesomeIcon icon={faFile} size="lg" />
+                </p>
               </div>
             )}
-            {deletable && (
+            {isRemoved && (
+              <div
+                className="absolute inset-0 flex justify-center items-center bg-white bg-opacity-50"
+                style={{ pointerEvents: "none" }}
+              >
+                <FontAwesomeIcon
+                  icon={faBan}
+                  size="4x"
+                  className="text-red-500 cursor-pointer"
+                  onClick={() => handleRestore(id)}
+                  style={{ pointerEvents: "auto" }}
+                />
+              </div>
+            )}
+            {deletable && !isRemoved && (
               <button
                 type="button"
                 onClick={() => handleRemove(id)}
