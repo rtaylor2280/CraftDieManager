@@ -71,20 +71,23 @@ export default function UpdateDieForm({ dieId }) {
   // Fetch data on component mount
   useEffect(() => {
     fetchData();
-  }, [dieId]);
+  }, []);
 
   const handleRemoveImage = (id) => {
-    setRemovedImages((prev) => [...prev, id]); // Add to removed images
-    setAdditionalImages((prev) => prev.filter((fileId) => fileId !== id)); // Update remaining images
+    setRemovedImages((prev) => [...prev, id]);
+  };
+
+  const handleRestoreImage = (id) => {
+    setRemovedImages((prev) => prev.filter((removedId) => removedId !== id));
   };
 
   const handleSubmit = async (e, closeAfterSave = false) => {
     e.preventDefault();
     setIsSubmitting(true);
-
+  
     try {
       const updates = { name, description, location_id: locationId };
-
+  
       // Handle primary image replacement
       if (primaryImageFile) {
         const primaryFileIds = await uploadFiles([primaryImageFile], {
@@ -94,19 +97,23 @@ export default function UpdateDieForm({ dieId }) {
         });
         updates.primary_image = primaryFileIds[0];
       }
-
-      // Handle new additional files
+  
+      // Prepare the final list of additional images
+      const finalAdditionalImages = additionalImages.filter(
+        (id) => !removedImages.includes(id)
+      );
+  
       if (additionalFiles.length > 0) {
         const additionalFileIds = await uploadFiles(additionalFiles, {
           folder: "DIES",
           prefix: dieId,
           startIndex: additionalImages.length + 2,
         });
-        updates.additional_images = [...additionalImages, ...additionalFileIds];
+        updates.additional_images = [...finalAdditionalImages, ...additionalFileIds];
       } else {
-        updates.additional_images = additionalImages; // Keep the updated array
+        updates.additional_images = finalAdditionalImages;
       }
-
+  
       // Delete removed images
       if (removedImages.length > 0) {
         await fetch("/api/delete-files", {
@@ -115,23 +122,26 @@ export default function UpdateDieForm({ dieId }) {
           body: JSON.stringify({ fileIds: removedImages }),
         });
       }
-
+  
       // Update die record
       const res = await fetch(`/api/dies`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: dieId, ...updates }),
       });
-
+  
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.error || "Failed to update die record.");
       }
-
+  
+      // Clear queued files if they were used
+      if (primaryImageFile) setPrimaryImageFile(null);
+      if (additionalFiles.length > 0) setAdditionalFiles([]);
+  
       if (closeAfterSave) {
         alert("Die updated successfully!");
-        // Navigate to /dies after successful save
-        router.push(`/dies?message=Die updated successfully!`);
+        router.push(`/dies`);
       } else {
         setMessage("Die updated successfully!");
         await fetchData(); // Refetch data if not closing
@@ -172,18 +182,9 @@ export default function UpdateDieForm({ dieId }) {
   };
 
   if (loading) {
-    // Show Spinner while loading data
     return (
-      <div className="flex flex-grow items-center justify-center bg-gray-100 p-4">
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white p-6 rounded shadow-md w-full max-w-lg"
-        >
-          <h1 className="text-2xl font-bold mb-4 text-center">Update Die</h1>
-          <div className="flex items-center justify-center h-screen">
-            <Spinner />
-          </div>
-        </form>
+      <div className="flex flex-grow items-center justify-center bg-gray-100">
+        <Spinner />
       </div>
     );
   }
@@ -263,22 +264,24 @@ export default function UpdateDieForm({ dieId }) {
             <ImageUploader
               onFileChange={(file) => setPrimaryImageFile(file)}
               allowMultiple={false}
+              clear={!primaryImageFile} // Reset when primaryImageFile is cleared
             />
           )}
         </div>
 
         <div className="mb-4">
           <h3 className="text-gray-700 font-bold mb-2">Additional Images:</h3>
-          <div className="relative mb-4 flex justify-center items-center">
-            <LazyImageGrid
-              fileIds={additionalImages}
-              onRemove={handleRemoveImage}
-              deletable={true}
-            />
-          </div>
+          <LazyImageGrid
+            fileIds={additionalImages}
+            onRemove={handleRemoveImage}
+            onRestore={handleRestoreImage} // Pass restore handler
+            removedIds={removedImages}
+            deletable={true}
+          />
           <ImageUploader
             onFileChange={(files) => setAdditionalFiles(files)}
             allowMultiple={true}
+            clear={additionalFiles.length === 0}
           />
         </div>
 

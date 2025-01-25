@@ -33,8 +33,13 @@ export default function TestPage() {
   };
 
   const handleRemoveImage = (id) => {
-    setRemovedIds((prev) => [...prev, id]);
-    setImageFileIds((prev) => prev.filter((fileId) => fileId !== id));
+    if (!removedIds.includes(id)) {
+      setRemovedIds((prev) => [...prev, id]); // Mark ID as removed
+    }
+  };
+
+  const handleRestoreImage = (id) => {
+    setRemovedIds((prev) => prev.filter((removedId) => removedId !== id)); // Remove ID from removedIds
   };
 
   // Load the folder files on page load
@@ -49,26 +54,27 @@ export default function TestPage() {
         {isLoading && <p>Loading files...</p>}
         {error && <p className="text-red-500 mb-4">{error}</p>}
         <LazyImageGrid
-          fileIds={Array.isArray(imageFileIds) ? imageFileIds : []}
+          fileIds={imageFileIds}
           onRemove={handleRemoveImage}
+          onRestore={handleRestoreImage} // Pass restore handler
+          removedIds={removedIds}
           deletable={true}
         />
+
         <div className="mt-6">
           <h2 className="text-xl font-bold">Removed IDs:</h2>
           <ul className="list-disc pl-6">
-            {Array.isArray(removedIds) ? (
-              removedIds.map((id) => <li key={id}>{id}</li>)
-            ) : (
-              <li>No IDs removed</li>
-            )}
+            {removedIds.map((id) => (
+              <li key={id}>{id}</li>
+            ))}
           </ul>
           <h2 className="text-xl font-bold mt-4">Remaining IDs:</h2>
           <ul className="list-disc pl-6">
-            {Array.isArray(imageFileIds) ? (
-              imageFileIds.map((id) => <li key={id}>{id}</li>)
-            ) : (
-              <li>No remaining IDs</li>
-            )}
+            {imageFileIds
+              .filter((id) => !removedIds.includes(id))
+              .map((id) => (
+                <li key={id}>{id}</li>
+              ))}
           </ul>
         </div>
       </div>
