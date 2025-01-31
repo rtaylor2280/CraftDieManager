@@ -7,12 +7,14 @@ import ImageUploader from "@/components/dies/ImageUploader";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleXmark } from "@fortawesome/free-solid-svg-icons";
 import Spinner, { StarWithText } from "@/components/Spinner";
+import TagSelector from "@/components/dies/TagSelector";
 
 export default function UpdateDieForm({ dieId }) {
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [locationId, setLocationId] = useState("");
+  const [selectedTags, setSelectedTags] = useState([]); // Track currently selected tags
   const [primaryImage, setPrimaryImage] = useState(null); // Existing primary image
   const [primaryImageFile, setPrimaryImageFile] = useState(null); // New primary image file
   const [additionalImages, setAdditionalImages] = useState([]); // File IDs for additional images
@@ -28,43 +30,29 @@ export default function UpdateDieForm({ dieId }) {
   // Define fetchData as a reusable function
   const fetchData = async () => {
     try {
-      const dieResponse = await fetch(`/api/dies?id=${dieId}`);
-      const locationResponse = await fetch(`/api/locations`);
+      const [dieResponse, locationResponse] = await Promise.all([
+        fetch(`/api/dies?id=${dieId}`),
+        fetch(`/api/locations`),
+      ]);
 
-      if (dieResponse.ok && locationResponse.ok) {
-        const dieData = await dieResponse.json();
-        const locationData = await locationResponse.json();
-
-        setName(dieData.name || "");
-        setDescription(dieData.description || "");
-        setLocationId(dieData.location_id || "");
-        setLocations(locationData);
-
-        if (dieData.primary_image) {
-          // Fetch primary image data
-          const primaryImageResponse = await fetch("/api/get-files", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ fileIds: [dieData.primary_image] }),
-          });
-
-          if (primaryImageResponse.ok) {
-            const primaryImageData = await primaryImageResponse.json();
-            setPrimaryImage(primaryImageData.files[0]?.data || null); // Set base64 data
-          }
-        }
-
-        if (dieData.additional_images?.length) {
-          setAdditionalImages(dieData.additional_images);
-        }
-      } else {
+      if (!dieResponse.ok || !locationResponse.ok) {
         throw new Error("Failed to fetch data.");
       }
+
+      const [dieData, locationData] = await Promise.all([
+        dieResponse.json(),
+        locationResponse.json(),
+      ]);
+
+      setName(dieData.name || "");
+      setDescription(dieData.description || "");
+      setLocationId(dieData.location_id || "");
+      setLocations(locationData);
     } catch (error) {
       console.error("Error fetching data:", error);
       setError("Failed to load die details or locations.");
     } finally {
-      setLoading(false); // Set loading to false when data fetching is done
+      setLoading(false);
     }
   };
 
@@ -84,10 +72,10 @@ export default function UpdateDieForm({ dieId }) {
   const handleSubmit = async (e, closeAfterSave = false) => {
     e.preventDefault();
     setIsSubmitting(true);
-  
+
     try {
       const updates = { name, description, location_id: locationId };
-  
+
       // Handle primary image replacement
       if (primaryImageFile) {
         const primaryFileIds = await uploadFiles([primaryImageFile], {
@@ -97,23 +85,26 @@ export default function UpdateDieForm({ dieId }) {
         });
         updates.primary_image = primaryFileIds[0];
       }
-  
+
       // Prepare the final list of additional images
       const finalAdditionalImages = additionalImages.filter(
         (id) => !removedImages.includes(id)
       );
-  
+
       if (additionalFiles.length > 0) {
         const additionalFileIds = await uploadFiles(additionalFiles, {
           folder: "DIES",
           prefix: dieId,
           startIndex: additionalImages.length + 2,
         });
-        updates.additional_images = [...finalAdditionalImages, ...additionalFileIds];
+        updates.additional_images = [
+          ...finalAdditionalImages,
+          ...additionalFileIds,
+        ];
       } else {
         updates.additional_images = finalAdditionalImages;
       }
-  
+
       // Delete removed images
       if (removedImages.length > 0) {
         await fetch("/api/delete-files", {
@@ -122,23 +113,40 @@ export default function UpdateDieForm({ dieId }) {
           body: JSON.stringify({ fileIds: removedImages }),
         });
       }
-  
+
       // Update die record
       const res = await fetch(`/api/dies`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: dieId, ...updates }),
       });
-  
+
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.error || "Failed to update die record.");
       }
-  
+
+      // Update tags dynamically
+      if (selectedTags.length > 0) {
+        const tagUpdateRes = await fetch(`/api/die-tags`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            die_id: dieId,
+            updated_tag_ids: selectedTags,
+          }),
+        });
+
+        if (!tagUpdateRes.ok) {
+          const errorData = await tagUpdateRes.json();
+          throw new Error(errorData.error || "Failed to update tags.");
+        }
+      }
+
       // Clear queued files if they were used
       if (primaryImageFile) setPrimaryImageFile(null);
       if (additionalFiles.length > 0) setAdditionalFiles([]);
-  
+
       if (closeAfterSave) {
         alert("Die updated successfully!");
         router.push(`/dies`);
@@ -191,133 +199,143 @@ export default function UpdateDieForm({ dieId }) {
 
   return (
     <div className="flex flex-grow items-center justify-center bg-gray-100 p-4">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-6 rounded shadow-md w-full max-w-lg"
-      >
-        <h1 className="text-2xl font-bold mb-4 text-center">Update Die</h1>
+      <div className="container mx-auto px-4">
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white p-6 rounded shadow-md w-full"
+        >
+          <h1 className="text-2xl font-bold mb-4 text-center">Update Die</h1>
 
-        {message && <div className="text-green-500 mb-4">{message}</div>}
-        {error && <div className="text-red-500 mb-4">{error}</div>}
+          {message && <div className="text-green-500 mb-4">{message}</div>}
+          {error && <div className="text-red-500 mb-4">{error}</div>}
 
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">
-            Name
-          </label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">
-            Description
-          </label>
-          <textarea
-            placeholder="Description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="w-full p-2 border rounded text-black resize-none"
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">
-            Location
-          </label>
-          <select
-            value={locationId}
-            onChange={(e) => setLocationId(e.target.value)}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          >
-            <option value="">Select a location</option>
-            {locations.map((loc) => (
-              <option key={loc.id} value={loc.id}>
-                {loc.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="mb-4">
-          <h3 className="text-gray-700 font-bold mb-2">Primary Image:</h3>
-          {primaryImage ? (
-            <div className="relative mb-4 flex justify-center items-center">
-              <img
-                src={`data:image/jpeg;base64,${primaryImage}`}
-                alt="Primary Image"
-                className="w-full max-w-[75%] h-auto max-h-[75%] rounded object-contain"
-              />
-              <button
-                type="button"
-                onClick={() => setPrimaryImage(null)}
-                className="absolute top-2 right-2 text-gray-500"
-              >
-                <FontAwesomeIcon icon={faCircleXmark} />
-              </button>
-            </div>
-          ) : (
-            <ImageUploader
-              onFileChange={(file) => setPrimaryImageFile(file)}
-              allowMultiple={false}
-              clear={!primaryImageFile} // Reset when primaryImageFile is cleared
+          <div className="mb-4">
+            <label className="block text-gray-700 text-sm font-bold mb-2">
+              Name
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             />
-          )}
-        </div>
+          </div>
 
-        <div className="mb-4">
-          <h3 className="text-gray-700 font-bold mb-2">Additional Images:</h3>
-          <LazyImageGrid
-            fileIds={additionalImages}
-            onRemove={handleRemoveImage}
-            onRestore={handleRestoreImage} // Pass restore handler
-            removedIds={removedImages}
-            deletable={true}
-          />
-          <ImageUploader
-            onFileChange={(files) => setAdditionalFiles(files)}
-            allowMultiple={true}
-            clear={additionalFiles.length === 0}
-          />
-        </div>
+          <div className="mb-4">
+            <label className="block text-gray-700 text-sm font-bold mb-2">
+              Description
+            </label>
+            <textarea
+              placeholder="Description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full p-2 border rounded text-black resize-none"
+            />
+          </div>
 
-        <div className="flex flex-col gap-2 mt-4">
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className={`bg-blue-500 text-white p-2 rounded w-full flex items-center justify-center ${
-              isSubmitting
-                ? "opacity-50 cursor-not-allowed"
-                : "hover:bg-blue-600"
-            }`}
-          >
-            {isSubmitting ? <StarWithText /> : "Save"}
-          </button>
-          <button
-            type="button"
-            onClick={(e) => handleSubmit(e, true)}
-            disabled={isSubmitting}
-            className={`bg-green-500 text-white p-2 rounded w-full flex items-center justify-center ${
-              isSubmitting
-                ? "opacity-50 cursor-not-allowed"
-                : "hover:bg-green-600"
-            }`}
-          >
-            {isSubmitting ? <StarWithText /> : "Save & Close"}
-          </button>
-          <button
-            type="button"
-            onClick={handleCancel}
-            className="bg-gray-500 text-white p-2 rounded w-full flex items-center justify-center hover:bg-gray-600"
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
+          <div className="mb-4">
+            <label className="block text-gray-700 text-sm font-bold mb-2">
+              Location
+            </label>
+            <select
+              value={locationId}
+              onChange={(e) => setLocationId(e.target.value)}
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            >
+              <option value="">Select a location</option>
+              {locations.map((loc) => (
+                <option key={loc.id} value={loc.id}>
+                  {loc.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="mb-4">
+            <h3 className="text-gray-700 font-bold mb-2">Tags:</h3>
+            <TagSelector
+              onTagSelectionChange={setSelectedTags} // Update the selectedTags state
+              dieId={dieId} // Pass the die ID
+            />
+          </div>
+
+          <div className="mb-4">
+            <h3 className="text-gray-700 font-bold mb-2">Primary Image:</h3>
+            {primaryImage ? (
+              <div className="relative mb-4 flex justify-center items-center">
+                <img
+                  src={`data:image/jpeg;base64,${primaryImage}`}
+                  alt="Primary Image"
+                  className="w-full max-w-[75%] h-auto max-h-[75%] rounded object-contain"
+                />
+                <button
+                  type="button"
+                  onClick={() => setPrimaryImage(null)}
+                  className="absolute top-2 right-2 text-gray-500"
+                >
+                  <FontAwesomeIcon icon={faCircleXmark} />
+                </button>
+              </div>
+            ) : (
+              <ImageUploader
+                onFileChange={(file) => setPrimaryImageFile(file)}
+                allowMultiple={false}
+                clear={!primaryImageFile} // Reset when primaryImageFile is cleared
+              />
+            )}
+          </div>
+
+          <div className="mb-4">
+            <h3 className="text-gray-700 font-bold mb-2">Additional Images:</h3>
+            <LazyImageGrid
+              fileIds={additionalImages}
+              onRemove={handleRemoveImage}
+              onRestore={handleRestoreImage} // Pass restore handler
+              removedIds={removedImages}
+              deletable={true}
+            />
+            <ImageUploader
+              onFileChange={(files) => setAdditionalFiles(files)}
+              allowMultiple={true}
+              clear={additionalFiles.length === 0}
+            />
+          </div>
+
+          <div className="flex flex-col gap-2 mt-4">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className={`bg-blue-500 text-white p-2 rounded w-full flex items-center justify-center ${
+                isSubmitting
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:bg-blue-600"
+              }`}
+            >
+              {isSubmitting ? <StarWithText /> : "Save"}
+            </button>
+            <button
+              type="button"
+              onClick={(e) => handleSubmit(e, true)}
+              disabled={isSubmitting}
+              className={`bg-green-500 text-white p-2 rounded w-full flex items-center justify-center ${
+                isSubmitting
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:bg-green-600"
+              }`}
+            >
+              {isSubmitting ? <StarWithText /> : "Save & Close"}
+            </button>
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="bg-gray-500 text-white p-2 rounded w-full flex items-center justify-center hover:bg-gray-600"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

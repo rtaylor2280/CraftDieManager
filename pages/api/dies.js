@@ -5,9 +5,16 @@ export default async function handler(req, res) {
 
   try {
     if (req.method === "GET") {
-      const { id } = req.query; // Extract the ID from the query parameters
+      const { id, field } = req.query; // Extract the ID and field from the query parameters
 
-      if (id) {
+      if (id && field === "links") {
+        // Fetch only the links field for a specific die by ID
+        const [result] = await sql`SELECT links FROM dies WHERE id = ${id}`;
+        if (!result) {
+          return res.status(404).json({ error: "Die not found" });
+        }
+        return res.status(200).json({ links: result.links });
+      } else if (id) {
         // Fetch a specific die by ID
         const [die] = await sql`SELECT * FROM dies WHERE id = ${id}`;
         if (!die) {
