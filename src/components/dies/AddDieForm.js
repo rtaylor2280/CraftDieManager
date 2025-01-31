@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import ImageUploader from "@/components/dies/ImageUploader";
 import { StarWithText } from "@/components/Spinner";
 
-export default function AddDieForm({ onSuccess }) { // Accept onSuccess as a prop
+export default function AddDieForm({ onSuccess }) {
+  // Accept onSuccess as a prop
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [locationId, setLocationId] = useState("");
@@ -124,88 +125,92 @@ export default function AddDieForm({ onSuccess }) { // Accept onSuccess as a pro
 
   return (
     <div className="flex flex-grow items-center justify-center bg-gray-100 p-4">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-6 rounded shadow-md w-full max-w-lg"
-      >
-        <h1 className="text-2xl font-bold mb-4 text-center">Add New Die</h1>
-
-        {message && <div className="text-green-500 mb-4">{message}</div>}
-        {error && <div className="text-red-500 mb-4">{error}</div>}
-
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">
-            Name
-          </label>
-          <input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">
-            Description
-          </label>
-          <textarea
-            placeholder="Description"
-            value={description}
-            onChange={(e) => {
-              setDescription(e.target.value);
-              e.target.style.height = "auto";
-              e.target.style.height = `${e.target.scrollHeight}px`;
-            }}
-            className="w-full p-2 border rounded text-black resize-none overflow-hidden"
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-gray-700 text-sm font-bold mb-2">
-            Location
-          </label>
-          <select
-            value={locationId}
-            onChange={(e) => setLocationId(e.target.value)}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          >
-            <option value="">Select a location</option>
-            {locations.map((loc) => (
-              <option key={loc.id} value={loc.id}>
-                {loc.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="mb-4">
-          <ImageUploader
-            label="Primary Image"
-            onFileChange={(file) => setPrimaryImageFile(file)}
-            allowMultiple={false}
-          />
-        </div>
-
-        <div className="mb-4">
-          <ImageUploader
-            label="Additional Files"
-            onFileChange={(files) => setAdditionalFiles(files)}
-            allowMultiple={true}
-          />
-        </div>
-
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className={`bg-blue-500 text-white p-2 rounded w-full flex items-center justify-center ${
-            isSubmitting ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-600"
-          }`}
+      <div className="container mx-auto px-4">
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white p-6 rounded shadow-md w-full"
         >
-          {isSubmitting ? <StarWithText /> : "Add Die"}
-        </button>
-      </form>
+          <h1 className="text-2xl font-bold mb-4 text-center">Add New Die</h1>
+
+          {message && <div className="text-green-500 mb-4">{message}</div>}
+          {error && <div className="text-red-500 mb-4">{error}</div>}
+
+          <div className="mb-4">
+            <label className="block text-gray-700 text-sm font-bold mb-2">
+              Name
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-gray-700 text-sm font-bold mb-2">
+              Description
+            </label>
+            <textarea
+              placeholder="Description"
+              value={description}
+              onChange={(e) => {
+                setDescription(e.target.value);
+                e.target.style.height = "auto";
+                e.target.style.height = `${e.target.scrollHeight}px`;
+              }}
+              className="w-full p-2 border rounded text-black resize-none overflow-hidden"
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-gray-700 text-sm font-bold mb-2">
+              Location
+            </label>
+            <select
+              value={locationId}
+              onChange={(e) => setLocationId(e.target.value)}
+              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            >
+              <option value="">Select a location</option>
+              {locations.map((loc) => (
+                <option key={loc.id} value={loc.id}>
+                  {loc.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="mb-4">
+            <ImageUploader
+              label="Primary Image"
+              onFileChange={(file) => setPrimaryImageFile(file)}
+              allowMultiple={false}
+            />
+          </div>
+
+          <div className="mb-4">
+            <ImageUploader
+              label="Additional Files"
+              onFileChange={(files) => setAdditionalFiles(files)}
+              allowMultiple={true}
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className={`bg-blue-500 text-white p-2 rounded w-full flex items-center justify-center ${
+              isSubmitting
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:bg-blue-600"
+            }`}
+          >
+            {isSubmitting ? <StarWithText /> : "Add Die"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
