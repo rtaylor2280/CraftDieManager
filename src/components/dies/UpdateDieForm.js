@@ -30,29 +30,43 @@ export default function UpdateDieForm({ dieId }) {
   // Define fetchData as a reusable function
   const fetchData = async () => {
     try {
-      const [dieResponse, locationResponse] = await Promise.all([
-        fetch(`/api/dies?id=${dieId}`),
-        fetch(`/api/locations`),
-      ]);
+      const dieResponse = await fetch(`/api/dies?id=${dieId}`);
+      const locationResponse = await fetch(`/api/locations`);
 
-      if (!dieResponse.ok || !locationResponse.ok) {
+      if (dieResponse.ok && locationResponse.ok) {
+        const dieData = await dieResponse.json();
+        const locationData = await locationResponse.json();
+
+        setName(dieData.name || "");
+        setDescription(dieData.description || "");
+        setLocationId(dieData.location_id || "");
+        setLocations(locationData);
+
+        if (dieData.primary_image) {
+          // Fetch primary image data
+          const primaryImageResponse = await fetch("/api/get-files", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ fileIds: [dieData.primary_image] }),
+          });
+
+          if (primaryImageResponse.ok) {
+            const primaryImageData = await primaryImageResponse.json();
+            setPrimaryImage(primaryImageData.files[0]?.data || null); // Set base64 data
+          }
+        }
+
+        if (dieData.additional_images?.length) {
+          setAdditionalImages(dieData.additional_images);
+        }
+      } else {
         throw new Error("Failed to fetch data.");
       }
-
-      const [dieData, locationData] = await Promise.all([
-        dieResponse.json(),
-        locationResponse.json(),
-      ]);
-
-      setName(dieData.name || "");
-      setDescription(dieData.description || "");
-      setLocationId(dieData.location_id || "");
-      setLocations(locationData);
     } catch (error) {
       console.error("Error fetching data:", error);
       setError("Failed to load die details or locations.");
     } finally {
-      setLoading(false);
+      setLoading(false); // Set loading to false when data fetching is done
     }
   };
 
