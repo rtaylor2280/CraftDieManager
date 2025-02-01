@@ -15,7 +15,16 @@ export default function ImageUploader({
   const [inputKey, setInputKey] = useState(Date.now()); // Key for forcing input re-render
 
   const handleFileChange = (e) => {
-    const files = Array.from(e.target.files);
+    const files = Array.from(e.target.files).map((file) => {
+      // Check if the file is HEIC and rename its extension to .jpeg
+      if (file.type === "image/heic" || file.name.endsWith(".HEIC")) {
+        return new File([file], file.name.replace(/\.HEIC$/i, ".jpeg"), {
+          type: "image/jpeg",
+        });
+      }
+      return file;
+    });
+  
     setSelectedFiles(files);
     onFileChange(allowMultiple ? files : files[0]); // Send single file or array based on allowMultiple
 
