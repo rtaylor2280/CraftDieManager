@@ -18,21 +18,29 @@ export default function ImageUploader({
     const files = Array.from(e.target.files).map((file) => {
       // Check if the file is HEIC and rename its extension to .jpeg
       if (file.type === "image/heic" || file.name.endsWith(".HEIC")) {
-        return new File([file], file.name.replace(/\.HEIC$/i, ".jpeg"), {
+        const renamedFile = new File([file], file.name.replace(/\.HEIC$/i, ".jpeg"), {
           type: "image/jpeg",
         });
+        console.log("Renamed File:", renamedFile);
+        return renamedFile;
       }
+      console.log("Original File:", file);
       return file;
     });
-  
+
+    console.log("Selected Files:", files);
     setSelectedFiles(files);
     onFileChange(allowMultiple ? files : files[0]); // Send single file or array based on allowMultiple
 
     // Generate thumbnails for image files
     const fileReaders = files.map((file) => {
-      if (!file.type.startsWith("image/")) return null; // Skip non-image files
+      if (!file.type.startsWith("image/")) {
+        console.log("Skipping non-image file:", file);
+        return null; // Skip non-image files
+      }
       const reader = new FileReader();
       reader.onload = () => {
+        console.log("Thumbnail generated for file:", file.name);
         setThumbnails((prev) => [...prev, { file, src: reader.result }]);
       };
       reader.readAsDataURL(file);
@@ -44,6 +52,7 @@ export default function ImageUploader({
   };
 
   const handleRemoveFile = (index) => {
+    console.log("Removing file at index:", index);
     const updatedFiles = selectedFiles.filter((_, i) => i !== index);
     const updatedThumbnails = thumbnails.filter((_, i) => i !== index);
     setSelectedFiles(updatedFiles);
@@ -53,6 +62,7 @@ export default function ImageUploader({
 
   useEffect(() => {
     if (clear && selectedFiles.length > 0) {
+      console.log("Clearing all selected files and thumbnails");
       setSelectedFiles([]);
       setThumbnails([]);
       setInputKey(Date.now()); // Reset file input field
@@ -83,7 +93,7 @@ export default function ImageUploader({
               />
               <button
                 type="button"
-                onClick={() => handleRemove(id)}
+                onClick={() => handleRemoveFile(index)}
                 className="absolute top-2 right-2 text-gray-500 hover:text-red-500"
               >
                 <FontAwesomeIcon icon={faCircleXmark} size="lg" />
