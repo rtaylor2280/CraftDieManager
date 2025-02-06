@@ -82,7 +82,7 @@ export default function LazyImageGrid({
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       {fileIds.map((id) => {
         const image = images.find((img) => img.id === id);
         const isLoading = loadingIds.has(id);

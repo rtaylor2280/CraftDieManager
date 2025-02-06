@@ -1,6 +1,7 @@
 {
   "name": "craft-die-manager",
   "version": "0.1.0",
+  "type": "module",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -9,6 +10,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.741.0",
+    "@aws-sdk/lib-storage": "^3.741.0",
     "@fortawesome/fontawesome-svg-core": "^6.7.2",
     "@fortawesome/free-brands-svg-icons": "^6.7.2",
     "@fortawesome/free-regular-svg-icons": "^6.7.2",
@@ -22,6 +25,7 @@
     "cookie": "^1.0.2",
     "cookie-parser": "^1.4.7",
     "dotenv": "^16.4.7",
+    "formidable": "^3.5.2",
     "googleapis": "^144.0.0",
     "jsonwebtoken": "^9.0.2",
     "multiparty": "^4.2.3",
